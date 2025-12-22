@@ -69,9 +69,10 @@ impl SyncService {
             local_guard.get_all_external_databases().await?
         }; // Drop locks
 
-        let db_service = self.database_service.lock().await;
-        let local_db = db_service.get_local_database();
+        // Drop the lock immediately after getting settings
         let sync_settings = {
+            let db_service = self.database_service.lock().await;
+            let local_db = db_service.get_local_database();
             let guard = local_db.read().await;
             guard.get_global_sync_settings().await?
         };

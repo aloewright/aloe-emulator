@@ -1,18 +1,78 @@
+use crate::ai::context_builder::ContextBuilder;
 use crate::ai::ollama_client::OllamaClient;
+use crate::ai::openrouter_client::OpenRouterClient;
 
 #[tauri::command]
-pub async fn get_available_models() -> Result<Vec<String>, String> {
-    let client = OllamaClient::new(None);
-    client.list_models().await.map_err(|e| e.to_string())
+pub async fn get_available_models(
+    provider: String,
+    api_key: Option<String>,
+) -> Result<Vec<String>, String> {
+    match provider.as_str() {
+        "ollama" => {
+            let client = OllamaClient::new(None);
+            client.list_models().await.map_err(|e| e.to_string())
+        }
+        "openrouter" => {
+            if let Some(key) = api_key {
+                let client = OpenRouterClient::new(key);
+                client.list_models().await.map_err(|e| e.to_string())
+            } else {
+                Err("OpenRouter API key is required".to_string())
+            }
+        }
+        _ => Err(format!("Unknown provider: {}", provider)),
+    }
 }
 
 #[tauri::command]
 pub async fn generate_command(
+    provider: String,
     model: String,
     prompt: String,
     _context: Option<String>,
+    api_key: Option<String>,
 ) -> Result<String, String> {
-    let client = OllamaClient::new(None);
-    // TODO: Use context to build a better prompt
-    client.generate(&model, &prompt, None).await.map_err(|e| e.to_string())
+    println!(
+        "[AI] Generating command with provider: '{}', model: '{}'",
+        provider, model
+    );
+    println!("[AI] User Prompt: '{}'", prompt);
+
+    let context = ContextBuilder::build();
+    let system_prompt = ContextBuilder::construct_system_prompt(&context);
+    println!("[AI] System Prompt: '{}'", system_prompt);
+
+    match provider.as_str() {
+        "ollama" => {
+            let client = OllamaClient::new(None);
+            match client.generate(&model, &prompt, Some(&system_prompt)).await {
+                Ok(response) => {
+                    println!("[AI] Response received: '{}'", response);
+                    Ok(response)
+                }
+                Err(e) => {
+                    eprintln!("[AI] Error generating command: {}", e);
+                    Err(e.to_string())
+                }
+            }
+        }
+        "openrouter" => {
+            if let Some(key) = api_key {
+                let client = OpenRouterClient::new(key);
+                match client.generate(&model, &prompt, Some(&system_prompt)).await {
+                    Ok(response) => {
+                        println!("[AI] Response received: '{}'", response);
+                        Ok(response)
+                    }
+                    Err(e) => {
+                        eprintln!("[AI] Error generating command: {}", e);
+                        Err(e.to_string())
+                    }
+                }
+            } else {
+                Err("OpenRouter API key is required".to_string())
+            }
+        }
+        _ => Err(format!("Unknown provider: {}", provider)),
+    }
 }

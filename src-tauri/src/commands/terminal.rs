@@ -136,6 +136,10 @@ pub async fn write_to_terminal(
     request: WriteTerminalRequest,
     app_state: State<'_, AppState>,
 ) -> Result<(), AppError> {
+    println!(
+        "DEBUG: write_to_terminal command called for Terminal ID: {}",
+        request.terminal_id
+    );
     app_state.terminal_manager.write_to_terminal(request).await
 }
 

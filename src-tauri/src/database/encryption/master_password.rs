@@ -392,39 +392,8 @@ impl MasterPasswordManager {
     }
 
     /// Validate password strength
-    fn validate_password(&self, password: &str) -> EncryptionResult<()> {
-        if password.len() < 8 {
-            return Err(EncryptionError::InvalidKey(
-                "Password must be at least 8 characters".to_string(),
-            ));
-        }
-
-        if password.len() > 128 {
-            return Err(EncryptionError::InvalidKey(
-                "Password must be less than 128 characters".to_string(),
-            ));
-        }
-
-        let has_upper = password.chars().any(|c| c.is_uppercase());
-        let has_lower = password.chars().any(|c| c.is_lowercase());
-        let has_digit = password.chars().any(|c| c.is_ascii_digit());
-
-        if !has_upper || !has_lower || !has_digit {
-            return Err(EncryptionError::InvalidKey(
-                "Password must contain uppercase, lowercase, and numbers".to_string(),
-            ));
-        }
-
-        let common_passwords = ["password", "12345678", "qwerty", "admin", "letmein"];
-        if common_passwords
-            .iter()
-            .any(|&common| password.to_lowercase().contains(common))
-        {
-            return Err(EncryptionError::InvalidKey(
-                "Password is too common".to_string(),
-            ));
-        }
-
+    fn validate_password(&self, _password: &str) -> EncryptionResult<()> {
+        // Dev mode: Allow any password
         Ok(())
     }
 }

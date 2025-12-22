@@ -7,7 +7,7 @@
       <div :class="isMobile ? 'mt-2 mb-8' : 'mt-4 mb-12'">
         <img
           src="../assets/images/logo_500.png"
-          alt="Kerminal Logo"
+          alt="Aloe Logo"
           :class="isMobile ? 'w-20 h-20' : 'w-32 h-32'"
           class="mx-auto mb-4"
         />
@@ -15,7 +15,7 @@
           class="text-center font-extrabold bg-linear-to-br from-cyan-500 to-purple-500 bg-clip-text text-transparent"
           :class="isMobile ? 'text-3xl' : 'text-5xl md:text-6xl'"
         >
-          Kerminal
+          Aloe
         </h1>
         <p
           class="text-center text-gray-400"
@@ -25,20 +25,6 @@
         </p>
         <p class="text-center mt-1" :class="isMobile ? 'text-base' : 'text-xl'">
           Modern Terminal Emulator & SSH Manager
-        </p>
-        <p
-          class="text-center text-gray-400 mt-1"
-          :class="isMobile ? 'text-xs' : ''"
-        >
-          Made with ❤️ by
-          <a
-            href="https://klpod221.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="underline hover:text-white text-sm transition-colors duration-200 touch-manipulation"
-          >
-            klpod221
-          </a>
         </p>
       </div>
 

@@ -295,10 +295,17 @@ impl TerminalManager {
         let terminals = self.terminals.read().await;
 
         if let Some(terminal) = terminals.get(&request.terminal_id) {
+            println!(
+                "DEBUG: Found terminal {}, writing {} bytes",
+                request.terminal_id,
+                request.data.len()
+            );
             let mut terminal_guard = terminal.lock().await;
             terminal_guard.write(request.data.as_bytes()).await?;
             Ok(())
         } else {
+            println!("DEBUG: Terminal {} NOT FOUND", request.terminal_id);
+            println!("DEBUG: Available terminals: {:?}", terminals.keys());
             Err(AppError::TerminalNotFound(request.terminal_id))
         }
     }

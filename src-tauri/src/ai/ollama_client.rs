@@ -1,7 +1,6 @@
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
-use futures::Stream;
 
 const DEFAULT_HOST: &str = "http://localhost:11434";
 
@@ -65,11 +64,24 @@ impl OllamaClient {
             system: system.map(|s| s.to_string()),
         };
 
+        let req_json = serde_json::to_string(&req)?;
+        println!("[Ollama] Sending request to {}: {}", url, req_json);
+
         let resp = self.client.post(&url).json(&req).send().await?;
+        let status = resp.status();
+        println!("[Ollama] Response status: {}", status);
+
+        if !status.is_success() {
+            let error_text = resp.text().await?;
+            eprintln!("[Ollama] API Error: {}", error_text);
+            return Err(format!("Ollama API Error: {} - {}", status, error_text).into());
+        }
+
         let body: GenerateResponse = resp.json().await?;
+        println!("[Ollama] Parsed response: {:?}", body);
         Ok(body.response)
     }
 
-    // For streaming, we'll implement later if needed via command layer, 
+    // For streaming, we'll implement later if needed via command layer,
     // but basic non-streaming generating is a good start for MVP suggestions.
 }

@@ -1,5 +1,5 @@
 [package]
-name = "Kerminal"
+name = "Aloe"
 version = "2.5.5"
 description = "Modern Terminal with SSH, Tunneling & Cross-Device Sync"
 license = "MIT"

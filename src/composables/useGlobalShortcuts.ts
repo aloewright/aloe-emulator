@@ -212,10 +212,10 @@ export function useGlobalShortcuts() {
       const panelIds = workspaceStore.collectPanelIds();
       if (panelIds.length > 0) {
         const currentIndex = panelIds.indexOf(workspaceStore.activePanelId);
-        
+
         let prevIndex = currentIndex - 1;
         if (currentIndex === -1 || prevIndex < 0) {
-            prevIndex = panelIds.length - 1;
+          prevIndex = panelIds.length - 1;
         }
 
         const prevPanelId = panelIds[prevIndex];
@@ -236,6 +236,9 @@ export function useGlobalShortcuts() {
     },
     [ShortcutAction.OpenCommandPalette]: () => {
       openOverlay("command-palette");
+    },
+    [ShortcutAction.OpenAICommandPalette]: () => {
+      openOverlay("ai-palette");
     },
   };
 

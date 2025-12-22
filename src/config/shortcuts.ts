@@ -20,7 +20,7 @@ export const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
     label: "Split Terminal Horizontally",
     category: "Terminal",
     defaultKey: "l",
-    defaultModifiers: { ctrlKey: true }, // Ctrl on Windows/Linux, Cmd on Mac
+    defaultModifiers: { ctrlKey: true, shiftKey: true }, // Ctrl+Shift+L
     customizable: true,
   },
 
@@ -187,6 +187,14 @@ export const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
     category: "Navigation",
     defaultKey: "p",
     defaultModifiers: { ctrlKey: true, shiftKey: true }, // Ctrl+Shift+P on Windows/Linux, Cmd+Shift+P on Mac
+    customizable: true,
+  },
+  {
+    id: ShortcutAction.OpenAICommandPalette,
+    label: "Ask AI",
+    category: "Navigation",
+    defaultKey: "l",
+    defaultModifiers: { ctrlKey: true }, // Ctrl+L
     customizable: true,
   },
 ];

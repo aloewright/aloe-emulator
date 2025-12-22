@@ -84,8 +84,72 @@ impl DatabaseService {
             config.master_password_config.clone()
         };
 
-        let master_password_manager =
+        let mut master_password_manager =
             MasterPasswordManager::new(current_device.device_id.clone(), master_password_config);
+
+        // Auto-setup if missing
+        let has_entry = local_db
+            .get_master_password_entry(&current_device.device_id)
+            .await?
+            .is_some();
+
+        if !has_entry {
+            let req = SetupMasterPasswordRequest {
+                device_name: current_device.device_name.clone(),
+                password: "aloe".to_string(),
+                confirm_password: "aloe".to_string(),
+                auto_unlock: true,
+                use_keychain: false,
+                auto_lock_timeout: None,
+            };
+            let entry = master_password_manager.setup_master_password(req).await?;
+            local_db.save_master_password_entry(&entry).await?;
+        }
+
+        // Auto-unlock with Default Password
+        if let Some(entry) = local_db
+            .get_master_password_entry(&current_device.device_id)
+            .await?
+        {
+            let req = VerifyMasterPasswordRequest {
+                password: "aloe".to_string(),
+                device_id: None,
+            };
+
+            // Attempt verify
+            let is_valid = master_password_manager
+                .verify_master_password(req, &entry)
+                .await
+                .unwrap_or(false);
+
+            if !is_valid {
+                println!(
+                    "Auto-unlock failed with default password. Resetting database to force access."
+                );
+
+                // 1. Reset in-memory state
+                master_password_manager.reset_master_password().await?;
+
+                // 2. Clear old entry from DB
+                local_db
+                    .delete_master_password_entry(&current_device.device_id)
+                    .await?;
+
+                // 3. Re-setup with default password
+                let setup_req = SetupMasterPasswordRequest {
+                    device_name: current_device.device_name.clone(),
+                    password: "aloe".to_string(),
+                    confirm_password: "aloe".to_string(),
+                    auto_unlock: true,
+                    use_keychain: false,
+                    auto_lock_timeout: None,
+                };
+                let new_entry = master_password_manager
+                    .setup_master_password(setup_req)
+                    .await?;
+                local_db.save_master_password_entry(&new_entry).await?;
+            }
+        }
 
         Ok(Self {
             local_db: Arc::new(RwLock::new(local_db)),

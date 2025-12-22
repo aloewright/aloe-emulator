@@ -34,6 +34,7 @@ export enum ShortcutAction {
   OpenSSHProfiles = "openSSHProfiles",
   OpenSavedCommands = "openSavedCommands",
   OpenCommandPalette = "openCommandPalette",
+  OpenAICommandPalette = "openAICommandPalette",
 }
 
 /**

@@ -5,7 +5,7 @@ pub fn init(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>
     #[cfg(desktop)]
     {
         let window = app.get_webview_window("main").unwrap();
-        window.set_title("Kerminal").unwrap();
+        window.set_title("Aloe").unwrap();
     }
 
     let app_handle = app.handle().clone();
@@ -13,6 +13,16 @@ pub fn init(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>
         // Initialize updater service
         let updater_service = crate::services::updater::UpdaterService::new(app_handle.clone());
         updater_service.start_update_check_loop();
+
+        // Auto-start Ollama service
+        tauri::async_runtime::spawn(async move {
+            use std::process::Command;
+            println!("Attempting to start Ollama service...");
+            match Command::new("ollama").arg("serve").spawn() {
+                Ok(_) => println!("Ollama service started successfully"),
+                Err(e) => eprintln!("Failed to start Ollama service (it might not be installed or already running): {}", e),
+            }
+        });
 
         match AppState::new().await {
             Ok(app_state) => {
