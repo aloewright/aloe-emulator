@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod ai;
 mod commands;
 mod core;
 mod database;
@@ -157,6 +158,8 @@ pub fn main() {
             commands::terminal_profile::delete_terminal_profile,
             commands::database::backup::export_backup,
             commands::database::backup::import_backup,
+            commands::ai::get_available_models,
+            commands::ai::generate_command,
         ])
         .setup(setup::init)
         .run(tauri::generate_context!())

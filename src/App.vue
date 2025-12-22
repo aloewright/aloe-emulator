@@ -27,6 +27,7 @@
         <TerminalProfileManager />
 
         <CommandPaletteManager />
+        <CommandPaletteAIManager />
       </template>
     </div>
   </div>
@@ -73,6 +74,9 @@ const TerminalProfileManager = defineAsyncComponent(
 );
 const CommandPaletteManager = defineAsyncComponent(
   () => import("./components/CommandPaletteManager.vue"),
+);
+const CommandPaletteAIManager = defineAsyncComponent(
+  () => import("./components/CommandPaletteAIManager.vue"),
 );
 
 import { useOverlay } from "./composables/useOverlay";
