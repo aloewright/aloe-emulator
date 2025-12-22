@@ -47,7 +47,7 @@ sqlx = { version = "0.8", features = [
     "chrono",
     "uuid",
 ] }
-mongodb = "2.8"
+mongodb = "3.2"
 bson = "2.8"
 
 # Encryption dependencies
