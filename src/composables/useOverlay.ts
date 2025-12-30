@@ -148,14 +148,14 @@ export function useOverlay() {
     hasActiveOverlay: overlayStore.hasActiveOverlay,
 
     updateOverlayProp: (overlayId: string, propName: string, value: any) => {
-        const overlay = overlayStore.getOverlayById(overlayId);
-        if (overlay) {
-            if (!overlay.config.props) {
-                overlay.config.props = {};
-            }
-            overlay.config.props[propName] = value;
+      const overlay = overlayStore.getOverlayById(overlayId);
+      if (overlay) {
+        if (!overlay.config.props) {
+          overlay.config.props = {};
         }
-    }
+        overlay.config.props[propName] = value;
+      }
+    },
   };
 }
 
