@@ -496,12 +496,15 @@ onMounted(async () => {
 
   term.open(terminalRef.value);
 
-  term.onSelectionChange(async () => {
+  // Debounce selection change to avoid excessive clipboard writes (IPC calls) during selection drag
+  const handleSelectionChange = debounce(async () => {
     if (term.hasSelection()) {
       const selectedText = term.getSelection();
       await writeText(selectedText);
     }
-  });
+  }, 200);
+
+  term.onSelectionChange(handleSelectionChange);
 
   term.attachCustomKeyEventHandler((arg: KeyboardEvent): boolean => {
     // Handle Ctrl+Shift+V / Cmd+Shift+V for paste (terminal-specific, always enabled)
