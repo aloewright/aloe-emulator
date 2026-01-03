@@ -31,6 +31,8 @@
         :disabled="disabled"
         :readonly="readonly"
         :autocomplete="autocomplete"
+        :aria-invalid="!!errorMessage"
+        :aria-describedby="ariaDescribedby"
         :class="[
           'block w-full rounded-lg border transition-all duration-200',
           'focus:outline-none appearance-none',
@@ -85,12 +87,20 @@
 
     <div v-if="helper" :class="space && 'min-h-5'">
       <!-- Helper text (only show if no error) -->
-      <p v-if="helperText && !errorMessage" class="text-xs text-gray-400">
+      <p
+        v-if="helperText && !errorMessage"
+        :id="helperId"
+        class="text-xs text-gray-400"
+      >
         {{ helperText }}
       </p>
 
       <!-- Error message -->
-      <p v-if="errorMessage" class="text-xs text-red-400 flex items-center">
+      <p
+        v-if="errorMessage"
+        :id="errorId"
+        class="text-xs text-red-400 flex items-center"
+      >
         <TriangleAlert class="mr-1" :size="12" />
         {{ errorMessage }}
       </p>
@@ -146,11 +156,19 @@ const {
   errorMessage,
   touched,
   inputId,
+  errorId,
+  helperId,
   validate,
   handleBlur,
   handleFocus,
   handleKeydown,
 } = useFormField(props, emit);
+
+const ariaDescribedby = computed(() => {
+  if (errorMessage.value) return errorId.value;
+  if (props.helperText) return helperId.value;
+  return undefined;
+});
 
 const { sizeClasses, stateClasses, iconSize } = useFormStyles(props);
 
