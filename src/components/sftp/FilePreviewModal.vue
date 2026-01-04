@@ -356,6 +356,7 @@ import Modal from "../ui/Modal.vue";
 import Button from "../ui/Button.vue";
 import { useOverlay } from "../../composables/useOverlay";
 import { message } from "../../utils/message";
+import { renderMarkdown } from "../../utils/markdown";
 import { useSFTPStore } from "../../stores/sftp";
 import type { FileEntry } from "../../types/sftp";
 import { readFile, remove } from "@tauri-apps/plugin-fs";
@@ -629,27 +630,6 @@ function endPan() {
   isPanning.value = false;
   document.removeEventListener("mousemove", handlePan);
   document.removeEventListener("mouseup", endPan);
-}
-
-function renderMarkdown(md: string): string {
-  let html = md
-    .replaceAll(/^### (.*$)/gim, "<h3>$1</h3>")
-    .replaceAll(/^## (.*$)/gim, "<h2>$1</h2>")
-    .replaceAll(/^# (.*$)/gim, "<h1>$1</h1>")
-    .replaceAll(/\*\*(.*?)\*\*/gim, "<strong>$1</strong>")
-    .replaceAll(/__(.*?)__/gim, "<strong>$1</strong>")
-    .replaceAll(/\*(.*?)\*/gim, "<em>$1</em>")
-    .replaceAll(/_(.*?)_/gim, "<em>$1</em>")
-    .replaceAll(/```([\s\S]*?)```/gim, "<pre><code>$1</code></pre>")
-    .replaceAll(/`(.*?)`/gim, "<code>$1</code>")
-    .replaceAll(
-      /\[([^\]]{1,1000})\]\(([^)]{1,1000})\)/gim,
-      '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">$1</a>',
-    )
-    .replaceAll(/\n\n/gim, "</p><p>")
-    .replaceAll(/\n/gim, "<br>");
-
-  return `<p>${html}</p>`;
 }
 
 function formatFileSize(bytes: number): string {
