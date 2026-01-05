@@ -98,9 +98,7 @@ export function useGlobalShortcuts() {
     // Don't match if both Ctrl and Meta are pressed (should be one or the other)
     const onlyOneModifier = !(event.ctrlKey && event.metaKey);
 
-    return (
-      ctrlOrMetaMatches && altMatches && shiftMatches && onlyOneModifier
-    );
+    return ctrlOrMetaMatches && altMatches && shiftMatches && onlyOneModifier;
   };
 
   const handleKeydown = (event: KeyboardEvent): void => {
@@ -178,7 +176,10 @@ export function useGlobalShortcuts() {
             (t) => t.id === activePanel.activeTabId,
           );
           const nextIndex = (currentIndex + 1) % activePanel.tabs.length;
-          workspaceStore.selectTab(activePanel.id, activePanel.tabs[nextIndex].id);
+          workspaceStore.selectTab(
+            activePanel.id,
+            activePanel.tabs[nextIndex].id,
+          );
         }
       }
     },
