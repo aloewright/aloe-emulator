@@ -3,42 +3,37 @@
     <TopBar />
 
     <div class="grow overflow-hidden">
-      <MasterPasswordManager />
+      <SystemDashboard v-if="viewState.activeView === 'dashboard'" />
 
-      <template v-if="authStore.isAuthenticated">
-        <SystemDashboard v-if="viewState.activeView === 'dashboard'" />
+      <Workspace v-if="viewState.activeView === 'workspace'" />
 
-        <Workspace v-if="viewState.activeView === 'workspace'" />
+      <SFTPBrowser v-if="viewState.activeView === 'sftp'" />
 
-        <SFTPBrowser v-if="viewState.activeView === 'sftp'" />
+      <SSHProfileManager />
 
-        <SSHProfileManager />
+      <SavedCommandManager />
 
-        <SavedCommandManager />
+      <RecordingsManager />
 
-        <RecordingsManager />
+      <TunnelManager />
 
-        <TunnelManager />
+      <SyncManager />
 
-        <SyncManager />
+      <SettingsManager />
 
-        <SettingsManager />
+      <TerminalProfileManager />
 
-        <TerminalProfileManager />
-
-        <CommandPaletteManager />
-        <CommandPaletteAIManager />
-      </template>
+      <CommandPaletteManager />
+      <CommandPaletteAIManager />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch, defineAsyncComponent } from "vue";
+import { onMounted, watch, defineAsyncComponent } from "vue";
 import { message } from "./utils/message";
 
 import TopBar from "./components/TopBar.vue";
-import MasterPasswordManager from "./components/auth/MasterPasswordManager.vue";
 
 const SystemDashboard = defineAsyncComponent(
   () => import("./components/dashboard/SystemDashboard.vue"),
@@ -81,21 +76,20 @@ import { useOverlay } from "./composables/useOverlay";
 import { useGlobalShortcuts } from "./composables/useGlobalShortcuts";
 
 import { useViewStateStore } from "./stores/viewState";
-import { useAuthStore } from "./stores/auth";
 import { useUpdaterStore } from "./stores/updater";
 
 const viewState = useViewStateStore();
-const authStore = useAuthStore();
 const updaterStore = useUpdaterStore();
 
-const { openOverlay, closeAllOverlays } = useOverlay();
+const { openOverlay } = useOverlay();
 
 // Initialize global keyboard shortcuts once at app level
 useGlobalShortcuts();
 
-let unlisten: (() => void) | undefined;
-
 onMounted(async () => {
+  // Enable top bar immediately (no auth)
+  viewState.toggleTopBar(true);
+
   // Initialize updater store (detect platform)
   updaterStore.initialize();
 
@@ -113,81 +107,5 @@ onMounted(async () => {
     },
     { immediate: true }
   );
-
-  try {
-    await authStore.initialize();
-
-    if (!authStore.requiresSetup && !authStore.status.isUnlocked) {
-      if (authStore.status.autoUnlockEnabled) {
-        const success = await authStore.tryAutoUnlock();
-
-        await authStore.checkStatus();
-
-        if (success && authStore.isAuthenticated) {
-          return; // Exit early, don't open any overlays
-        }
-      }
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    if (authStore.isAuthenticated) {
-      return;
-    }
-
-    if (authStore.requiresSetup) {
-      openOverlay("master-password-setup");
-      return;
-    }
-
-    if (authStore.requiresUnlock) {
-      openOverlay("master-password-unlock");
-      return;
-    }
-  } catch (error) {
-    // Ignore error during initial auto-unlock attempt
-    console.debug("Auto-unlock failed silently:", error);
-  }
 });
-
-onUnmounted(() => {
-  if (unlisten) unlisten();
-});
-
-watch(
-  () => [
-    authStore.requiresSetup,
-    authStore.requiresUnlock,
-    authStore.isAuthenticated,
-  ],
-  ([requiresSetup, requiresUnlock, isAuthenticated]) => {
-    if (isAuthenticated) {
-      closeAllOverlays();
-      return;
-    }
-
-    if (requiresSetup) {
-      openOverlay("master-password-setup");
-    } else if (requiresUnlock) {
-      openOverlay("master-password-unlock");
-    }
-  },
-  { immediate: false },
-);
-
-onUnmounted(() => {
-  authStore.cleanup();
-});
-
-watch(
-  () => authStore.isAuthenticated,
-  (isAuthenticated) => {
-    if (isAuthenticated) {
-      closeAllOverlays();
-      viewState.toggleTopBar(true);
-    } else {
-      viewState.toggleTopBar(false);
-    }
-  },
-);
 </script>

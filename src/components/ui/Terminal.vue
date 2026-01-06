@@ -69,23 +69,19 @@ import {
   computed,
 } from "vue";
 import { debounce } from "../../utils/helpers";
-import { extractErrorMessage } from "../../utils/errorHandler";
 import { TerminalBufferManager, InputBatcher } from "../../core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useWorkspaceStore } from "../../stores/workspace";
-import { XCircle, RefreshCw, X, Wifi, Sparkles } from "lucide-vue-next";
+import { Wifi } from "lucide-vue-next";
 import { writeText, readText } from "@tauri-apps/plugin-clipboard-manager";
-import Button from "./Button.vue";
 import HistorySearchModal from "../history/HistorySearchModal.vue";
 import InlineAISuggestion from "../ai/InlineAISuggestion.vue";
 import { getTerminalTheme } from "../../utils/terminalTheme";
 import type { SimpleTerminal } from "../../core";
 import { aiContextAnalyzer, type AIAction } from "../../services/aiContextAnalyzer";
 import { useSettingsStore } from "../../stores/settings";
-import { useViewStateStore } from "../../stores/viewState";
 import { useAIStore } from "../../stores/ai";
 import { writeToTerminal } from "../../services/terminal";
-import type { PanelLayout, Tab } from "../../types/panel";
 
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
@@ -121,7 +117,6 @@ let fitAddon: FitAddon;
 
 const workspaceStore = useWorkspaceStore();
 const settingsStore = useSettingsStore();
-const viewState = useViewStateStore();
 const aiStore = useAIStore();
 
 const currentTerminal = computed(() =>
@@ -197,27 +192,7 @@ const handleReconnect = () => {
   }
 };
 
-const handleCloseTab = () => {
-  const findPanelWithTab = (layout: PanelLayout): string | null => {
-    if (layout.type === "panel" && layout.panel) {
-      const hasTab = layout.panel.tabs.some(
-        (t: Tab) => t.id === props.terminalId,
-      );
-      if (hasTab) return layout.panel.id;
-    } else if (layout.type === "split" && layout.children) {
-      for (const child of layout.children) {
-        const found = findPanelWithTab(child);
-        if (found) return found;
-      }
-    }
-    return null;
-  };
 
-  const panelId = findPanelWithTab(workspaceStore.panelLayout);
-  if (panelId) {
-    workspaceStore.closeTab(panelId, props.terminalId);
-  }
-};
 
 const bufferManager = TerminalBufferManager.getInstance();
 
@@ -411,8 +386,6 @@ const handleGenerateCommand = async (prompt: string) => {
     await aiStore.generateCommand(prompt);
     // The command palette will show the result, so we just dismiss the inline input
     handleDismissSuggestion();
-    // And open the main AI palette
-    viewState.toggleCommandPalette('ai');
 }
 
 // Global shortcut for Cmd+I

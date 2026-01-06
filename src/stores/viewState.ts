@@ -6,7 +6,7 @@ import { ref } from "vue";
  * Manages the state of current active views.
  */
 export const useViewStateStore = defineStore("viewState", () => {
-  const isTopBarActive = ref(false);
+  const isTopBarActive = ref(true);
   const isAiAssistantActive = ref(false);
 
   const activeView = ref<"dashboard" | "workspace" | "sftp">("workspace");
