@@ -27,7 +27,7 @@
     "asciinema-player": "^3.12.1",
     "date-fns": "^4.1.0",
     "lucide-vue-next": "^0.544.0",
-    "monaco-editor": "^0.54.0",
+    "monaco-editor": "^0.55.1",
     "monaco-editor-vue3": "^1.0.4",
     "pinia": "^3.0.3",
     "prismjs": "^1.30.0",
