@@ -165,6 +165,7 @@ const showErrorOverlay = computed(
 );
 
 const suggestionBoxRef = ref<HTMLElement | null>(null);
+const inlineAIMode = ref<'suggestion' | 'input'>('suggestion');
 
 watch(() => aiStore.inlineSuggestion, (suggestion) => {
     // When the suggestion box appears or disappears, we need to resize the terminal
@@ -271,41 +272,37 @@ const fitAndFocus = debounce((): void => {
 }, 50);
 
 const writeOutput = (data: string): void => {
-  console.log(`[Terminal] writeOutput called for terminal ${props.terminalId}, length: ${data.length}`);
+  if (term) {
+    try {
+      term.write(data);
 
-  if (!term) {
-    console.error(`[Terminal] 'term' instance is null or undefined for ${props.terminalId}`);
-    return;
-  }
-
-  try {
-    term.write(data);
-
-    if (props.backendTerminalId) {
-      bufferManager.saveToLocalBuffer(props.backendTerminalId, data);
-    }
-
-    // Analyze output for inline AI suggestions
-    if (aiStore.inlineEnabled) {
-      // console.log("Analyzing output:", data); // DEBUG - keeping this but less verbose if needed
-      const suggestion = aiContextAnalyzer.analyzeOutput(data);
-      if (suggestion) {
-        console.log("[Terminal] AI Suggestion found:", suggestion);
-        inlineAIMode.value = 'suggestion';
-        aiStore.setInlineSuggestion(suggestion);
-
-        // Also detect server URL for live preview
-        const serverUrl = aiContextAnalyzer.detectServerUrl(data);
-        if (serverUrl) {
-          console.log("[Terminal] Server URL detected:", serverUrl);
-          aiStore.setLivePreviewUrl(serverUrl);
-        }
+      if (props.backendTerminalId) {
+        bufferManager.saveToLocalBuffer(props.backendTerminalId, data);
       }
+
+      // Offload analysis to Web Worker
+      if (aiStore.inlineEnabled && aiWorker) {
+        debouncedAnalyze(data);
+      }
+    } catch (error) {
+      console.error(`Error in writeOutput for ${props.terminalId}:`, error);
     }
-  } catch (error) {
-    console.error(`[Terminal] Error in writeOutput for ${props.terminalId}:`, error);
   }
 };
+
+// Web Worker for AI analysis
+let aiWorker: Worker | null = null;
+
+const debouncedAnalyze = debounce((data: string) => {
+  if (aiWorker) {
+    try {
+      aiWorker.postMessage({ type: 'analyze', data });
+    } catch (err) {
+      console.error("[Terminal] Failed to post message to AI Worker:", err);
+    }
+  }
+}, 300); // 300ms debounce
+
 
 const restoreBuffer = async (): Promise<boolean> => {
   if (!term || !props.backendTerminalId) return false;
@@ -547,6 +544,42 @@ onMounted(async () => {
 
   window.addEventListener("resize", handleResize);
 
+  // Initialize AI Worker
+  if (window.Worker) {
+    try {
+      aiWorker = new Worker(new URL('../../workers/ai.worker.ts', import.meta.url), { type: 'module' });
+
+      aiWorker.onerror = (err) => {
+        console.error("[Terminal] AI Worker error:", err);
+      };
+
+      aiWorker.onmessage = (e) => {
+        if (!e || !e.data || typeof e.data.type !== 'string') {
+          console.warn("[Terminal] Received invalid message from AI worker");
+          return;
+        }
+
+        const { type, payload } = e.data;
+        switch (type) {
+          case 'suggestion':
+            inlineAIMode.value = 'suggestion';
+            aiStore.setInlineSuggestion(payload);
+            break;
+          case 'server-url':
+            aiStore.setLivePreviewUrl(payload);
+            break;
+          case 'error':
+            console.error("[Terminal] AI Worker reported error:", payload);
+            break;
+          default:
+             // Ignore unknown types
+        }
+      };
+    } catch (err) {
+      console.error("Failed to initialize AI Worker:", err);
+    }
+  }
+
   handleResize();
 });
 
@@ -565,6 +598,14 @@ onBeforeUnmount(async () => {
 
   if (term) {
     term.dispose();
+  }
+
+  // Cancel any pending AI analysis
+  debouncedAnalyze.cancel();
+
+  if (aiWorker) {
+    aiWorker.terminate();
+    aiWorker = null;
   }
 });
 </script>

@@ -182,17 +182,30 @@ const GIT_PATTERNS: OutputPattern[] = [
   },
 ];
 
+// Singleton instance
+const ANSI_REGEX = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
+
 export class AIContextAnalyzer {
   private outputBuffer: string = '';
   private lastSuggestionTime: number = 0;
   private suggestionCooldown: number = 5000; // 5 seconds between suggestions
 
   /**
+   * Strip ANSI escape codes
+   */
+  private stripAnsi(str: string): string {
+    return str.replace(ANSI_REGEX, '');
+  }
+
+  /**
    * Analyze terminal output and return suggestion if pattern matches
    */
   analyzeOutput(output: string): AISuggestion | null {
+    // Strip ANSI codes before processing
+    const cleanOutput = this.stripAnsi(output);
+
     // Append to buffer (keep last 5000 chars)
-    this.outputBuffer = (this.outputBuffer + output).slice(-5000);
+    this.outputBuffer = (this.outputBuffer + cleanOutput).slice(-5000);
 
     // Rate limit suggestions
     const now = Date.now();
@@ -249,8 +262,10 @@ export class AIContextAnalyzer {
    * Detect localhost URL from output
    */
   detectServerUrl(output: string): string | null {
+    // Strip ANSI before detecting URL
+    const cleanOutput = this.stripAnsi(output);
     const urlPattern = /https?:\/\/(?:localhost|127\.0\.0\.1):\d+/i;
-    const match = output.match(urlPattern);
+    const match = cleanOutput.match(urlPattern);
     return match ? match[0] : null;
   }
 
@@ -269,5 +284,4 @@ export class AIContextAnalyzer {
   }
 }
 
-// Singleton instance
 export const aiContextAnalyzer = new AIContextAnalyzer();

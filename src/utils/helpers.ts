@@ -4,19 +4,33 @@
  * @param wait - The number of milliseconds to wait before invoking the function.
  * @returns A debounced version of the input function.
  */
+export interface DebouncedFunction<T extends (...args: any[]) => any> {
+  (...args: Parameters<T>): void;
+  cancel: () => void;
+}
+
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number,
-): (...args: Parameters<T>) => void {
+): DebouncedFunction<T> {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  return (...args: Parameters<T>) => {
+  const debounced = (...args: Parameters<T>) => {
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
     }
 
     timeoutId = setTimeout(() => func(...args), wait);
   };
+
+  debounced.cancel = () => {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+  };
+
+  return debounced;
 }
 
 /**
