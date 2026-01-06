@@ -392,8 +392,42 @@ impl MasterPasswordManager {
     }
 
     /// Validate password strength
-    fn validate_password(&self, _password: &str) -> EncryptionResult<()> {
-        // Dev mode: Allow any password
+    fn validate_password(&self, password: &str) -> EncryptionResult<()> {
+        if password.len() < 8 {
+            return Err(EncryptionError::InvalidKey(
+                "Password must be at least 8 characters long".to_string(),
+            ));
+        }
+
+        let has_uppercase = password.chars().any(|c| c.is_uppercase());
+        let has_lowercase = password.chars().any(|c| c.is_lowercase());
+        let has_digit = password.chars().any(|c| c.is_numeric());
+        let has_special = password.chars().any(|c| !c.is_alphanumeric());
+
+        if !has_uppercase {
+            return Err(EncryptionError::InvalidKey(
+                "Password must contain at least one uppercase letter".to_string(),
+            ));
+        }
+
+        if !has_lowercase {
+            return Err(EncryptionError::InvalidKey(
+                "Password must contain at least one lowercase letter".to_string(),
+            ));
+        }
+
+        if !has_digit {
+            return Err(EncryptionError::InvalidKey(
+                "Password must contain at least one digit".to_string(),
+            ));
+        }
+
+        if !has_special {
+            return Err(EncryptionError::InvalidKey(
+                "Password must contain at least one special character".to_string(),
+            ));
+        }
+
         Ok(())
     }
 }
@@ -480,5 +514,26 @@ impl EncryptionService for MasterPasswordManager {
 
         String::from_utf8(decrypted)
             .map_err(|e| EncryptionError::DecryptionFailed(format!("Invalid UTF-8: {}", e)).into())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::database::{config::MasterPasswordConfig, encryption::MasterPasswordManager};
+
+    #[test]
+    fn test_validate_password_strength() {
+        let config = MasterPasswordConfig::default();
+        let manager = MasterPasswordManager::new("test-device".to_string(), config);
+
+        // Test weak passwords (should fail)
+        assert!(manager.validate_password("weak").is_err(), "Short password should fail");
+        assert!(manager.validate_password("lowercaseonly1!").is_err(), "Lowercase only should fail");
+        assert!(manager.validate_password("UPPERCASEONLY1!").is_err(), "Uppercase only should fail");
+        assert!(manager.validate_password("NoDigits!").is_err(), "No digits should fail");
+        assert!(manager.validate_password("NoSpecialChar1").is_err(), "No special char should fail");
+
+        // Test strong password (should pass)
+        assert!(manager.validate_password("StrongPass1!").is_ok(), "Strong password should pass");
     }
 }
