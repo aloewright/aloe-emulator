@@ -74,6 +74,7 @@ pub fn main() {
             commands::database::ssh::clear_connection_pool,
             commands::database::ssh::get_connection_pool_size,
             commands::database::ssh::get_ssh_config_hosts,
+            commands::database::ssh::scan_local_ssh_keys,
             commands::database::tunnel::create_tunnel,
             commands::database::tunnel::get_tunnels,
             commands::database::tunnel::get_tunnel,

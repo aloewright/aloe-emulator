@@ -244,6 +244,19 @@
           @click="toggleOverlay('backup-restore-modal')"
         />
 
+        <!-- AI Assistant Button -->
+        <Button
+          title="AI Assistant"
+          variant="ghost"
+          size="sm"
+          :icon="Sparkles"
+          :class="{
+            'bg-gray-800 text-gray-400 hover:text-white':
+              viewState.isAiAssistantActive,
+          }"
+          @click="toggleAiAssistant"
+        />
+
         <!-- Master Password  -->
         <Button
           title="Master Password Settings"
@@ -383,6 +396,7 @@ import {
   FolderOpen,
   FileCode,
   Archive,
+  Sparkles,
 } from "lucide-vue-next";
 import Button from "./ui/Button.vue";
 import SyncStatusIndicator from "./sync/SyncStatusIndicator.vue";
@@ -418,6 +432,10 @@ const toggleOverlay = (overlayName: string) => {
 
 const toggleMobileMenu = () => {
   showMobileMenu.value = !showMobileMenu.value;
+};
+
+const toggleAiAssistant = () => {
+  viewState.isAiAssistantActive = !viewState.isAiAssistantActive;
 };
 
 const handleMobileMenuClick = (overlayName: string) => {

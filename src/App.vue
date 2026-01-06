@@ -6,7 +6,7 @@
       <MasterPasswordManager />
 
       <template v-if="authStore.isAuthenticated">
-        <Dashboard v-if="viewState.activeView === 'dashboard'" />
+        <SystemDashboard v-if="viewState.activeView === 'dashboard'" />
 
         <Workspace v-if="viewState.activeView === 'workspace'" />
 
@@ -38,9 +38,10 @@ import { onMounted, onUnmounted, watch, defineAsyncComponent } from "vue";
 import { message } from "./utils/message";
 
 import TopBar from "./components/TopBar.vue";
+import MasterPasswordManager from "./components/auth/MasterPasswordManager.vue";
 
-const Dashboard = defineAsyncComponent(
-  () => import("./components/Dashboard.vue"),
+const SystemDashboard = defineAsyncComponent(
+  () => import("./components/dashboard/SystemDashboard.vue"),
 );
 const Workspace = defineAsyncComponent(
   () => import("./components/Workspace.vue"),
@@ -62,9 +63,6 @@ const TunnelManager = defineAsyncComponent(
 );
 const SyncManager = defineAsyncComponent(
   () => import("./components/sync/SyncManager.vue"),
-);
-const MasterPasswordManager = defineAsyncComponent(
-  () => import("./components/auth/MasterPasswordManager.vue"),
 );
 const SettingsManager = defineAsyncComponent(
   () => import("./components/settings/SettingsManager.vue"),

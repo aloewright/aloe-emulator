@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { invoke } from '@tauri-apps/api/core';
 import { LazyStore } from '@tauri-apps/plugin-store';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+import type { AISuggestion } from '../services/aiContextAnalyzer';
 
 const store = new LazyStore('settings.json');
 
@@ -15,6 +16,11 @@ interface AIState {
     suggestions: string[];
     isGenerating: boolean;
     error: string | null;
+    // Inline AI state
+    inlineEnabled: boolean;
+    inlineSuggestion: AISuggestion | null;
+    livePreviewUrl: string | null;
+    showLivePreview: boolean;
 }
 
 export const useAIStore = defineStore('ai', {
@@ -26,6 +32,11 @@ export const useAIStore = defineStore('ai', {
         suggestions: [],
         isGenerating: false,
         error: null,
+        // Inline AI state
+        inlineEnabled: true,
+        inlineSuggestion: null,
+        livePreviewUrl: null,
+        showLivePreview: false,
     }),
 
     actions: {
@@ -66,7 +77,7 @@ export const useAIStore = defineStore('ai', {
         async fetchModels() {
             this.error = null;
             try {
-                let args: any = { provider: this.activeProvider, apiKey: null };
+                let args: any = { provider: this.activeProvider, api_key: null };
 
                 if (this.activeProvider === 'openrouter') {
                     if (!this.openRouterKey) {
@@ -74,7 +85,7 @@ export const useAIStore = defineStore('ai', {
                         this.models = [];
                         return;
                     }
-                    args.apiKey = this.openRouterKey;
+                    args.api_key = this.openRouterKey;
                 }
 
                 const models = await invoke<string[]>('get_available_models', args);
@@ -110,7 +121,7 @@ export const useAIStore = defineStore('ai', {
                     model: this.activeModel,
                     prompt,
                     context: null,
-                    apiKey: this.openRouterKey,
+                    api_key: this.openRouterKey,
                 });
 
                 // Sanitize the result to remove markdown code blocks
@@ -147,6 +158,35 @@ export const useAIStore = defineStore('ai', {
                 console.error('Failed to copy to clipboard:', err);
                 this.error = `Failed to copy: ${err}`;
             }
+        },
+
+        // Inline AI actions
+        setInlineSuggestion(suggestion: AISuggestion | null) {
+            this.inlineSuggestion = suggestion;
+        },
+
+        dismissInlineSuggestion() {
+            this.inlineSuggestion = null;
+        },
+
+        toggleInlineAI(enabled?: boolean) {
+            this.inlineEnabled = enabled ?? !this.inlineEnabled;
+        },
+
+        setLivePreviewUrl(url: string | null) {
+            this.livePreviewUrl = url;
+            if (url) {
+                this.showLivePreview = true;
+            }
+        },
+
+        toggleLivePreview(show?: boolean) {
+            this.showLivePreview = show ?? !this.showLivePreview;
+        },
+
+        async sendFeedback(suggestionId: string, type: 'positive' | 'negative') {
+            // Could send to backend for ML training in future
+            console.log(`AI Feedback: ${type} for suggestion ${suggestionId}`);
         }
     }
 });

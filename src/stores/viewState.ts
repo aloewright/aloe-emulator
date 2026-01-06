@@ -7,6 +7,7 @@ import { ref } from "vue";
  */
 export const useViewStateStore = defineStore("viewState", () => {
   const isTopBarActive = ref(false);
+  const isAiAssistantActive = ref(false);
 
   const activeView = ref<"dashboard" | "workspace" | "sftp">("workspace");
 
@@ -21,6 +22,7 @@ export const useViewStateStore = defineStore("viewState", () => {
   return {
     isTopBarActive,
     activeView,
+    isAiAssistantActive,
     setActiveView,
     toggleTopBar,
   };

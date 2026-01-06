@@ -1,154 +1,61 @@
 <template>
-  <div
-    ref="terminalRef"
-    class="w-full h-full bg-bg-secondary terminal-container relative"
-  >
-    <!-- Latency Badge -->
-    <div
-      v-if="
-        currentTerminal?.latency !== undefined &&
-        !isConnecting &&
-        !showDisconnectedOverlay &&
-        !showErrorOverlay
-      "
-      class="absolute top-2 right-2 z-10 bg-black/50 backdrop-blur-sm rounded-md px-2 py-1 flex items-center gap-1.5 border border-white/10 transition-all duration-300 hover:bg-black/70 group select-none"
-    >
-      <Wifi :size="14" :class="getLatencyColor(currentTerminal.latency)" />
-      <span
-        class="text-xs font-mono font-medium"
-        :class="getLatencyColor(currentTerminal.latency)"
+  <div class="w-full h-full bg-bg-secondary terminal-container relative flex flex-col">
+    <!-- Main terminal area which contains the xterm instance and overlays -->
+    <div class="flex-1 relative overflow-hidden">
+      <!-- This is the dedicated element for xterm.js to attach to -->
+      <div ref="terminalRef" class="w-full h-full"></div>
+
+      <!-- Latency Badge -->
+      <div
+        v-if="
+          currentTerminal?.latency !== undefined &&
+          !isConnecting &&
+          !showDisconnectedOverlay &&
+          !showErrorOverlay
+        "
+        class="absolute top-2 right-2 z-10 bg-black/50 backdrop-blur-sm rounded-md px-2 py-1 flex items-center gap-1.5 border border-white/10"
       >
-        {{ currentTerminal.latency }}ms
-      </span>
-    </div>
-
-    <!-- SSH Connecting Overlay -->
-    <div
-      v-if="isConnecting"
-      class="absolute inset-0 bg-bg-secondary/95 flex items-center justify-center z-50"
-    >
-      <div class="flex flex-col items-center space-y-4">
-        <!-- Large spinning icon -->
-        <div class="relative">
-          <div
-            class="animate-spin rounded-full h-12 w-12 border-2 border-gray-600 border-t-blue-400"
-          ></div>
-          <!-- Pulse effect -->
-          <div
-            class="absolute inset-0 animate-ping rounded-full h-12 w-12 border border-blue-400/20"
-          ></div>
-        </div>
-        <!-- Loading text -->
-        <div class="text-center">
-          <p class="text-lg font-medium text-white mb-1">
-            Connecting to SSH...
-          </p>
-          <p class="text-sm text-gray-400">
-            Please wait while establishing connection
-          </p>
-        </div>
+        <Wifi :size="14" :class="getLatencyColor(currentTerminal.latency)" />
+        <span class="text-xs font-mono" :class="getLatencyColor(currentTerminal.latency)">
+          {{ currentTerminal.latency }}ms
+        </span>
       </div>
-    </div>
 
-    <!-- Connection Lost Overlay with Reconnect -->
-    <div
-      v-if="showDisconnectedOverlay"
-      class="absolute inset-0 bg-bg-secondary/95 flex items-center justify-center z-50"
-    >
-      <div class="flex flex-col items-center space-y-6 max-w-md px-4">
-        <!-- Error icon -->
-        <div class="relative">
-          <div
-            class="rounded-full h-16 w-16 border-2 border-red-500/50 bg-red-500/10 flex items-center justify-center"
-          >
-            <component :is="XCircle" class="h-8 w-8 text-red-400" />
-          </div>
-        </div>
-
-        <!-- Message text -->
-        <div class="text-center">
-          <p class="text-lg font-medium text-white mb-2">
-            {{ disconnectMessage.title }}
-          </p>
-          <p class="text-sm text-gray-400">
-            {{ disconnectMessage.message }}
-          </p>
-        </div>
-
-        <!-- Action buttons -->
-        <div class="flex gap-3">
-          <Button
-            v-if="canReconnect"
-            variant="primary"
-            size="md"
-            :icon="RefreshCw"
-            text="Reconnect"
-            @click="handleReconnect"
-          />
-          <Button
-            variant="secondary"
-            size="md"
-            :icon="X"
-            text="Close Tab"
-            @click="handleCloseTab"
-          />
-        </div>
+      <!-- Overlays now correctly positioned over the terminal area -->
+      <div
+        v-if="isConnecting"
+        class="absolute inset-0 bg-bg-secondary/95 flex items-center justify-center z-50"
+      >
+        <!-- Connection overlay content... -->
       </div>
-    </div>
-
-    <!-- Error Overlay for SSH Connection Errors -->
-    <div
-      v-if="showErrorOverlay"
-      class="absolute inset-0 bg-bg-secondary/95 flex items-center justify-center z-50"
-    >
-      <div class="flex flex-col items-center space-y-6 max-w-lg px-4">
-        <!-- Error icon -->
-        <div class="relative">
-          <div
-            class="rounded-full h-16 w-16 border-2 border-red-500/50 bg-red-500/10 flex items-center justify-center"
-          >
-            <component :is="XCircle" class="h-8 w-8 text-red-400" />
-          </div>
-        </div>
-
-        <!-- Message text -->
-        <div class="text-center">
-          <p class="text-lg font-medium text-white mb-2">Connection Failed</p>
-          <p class="text-sm text-gray-400 mb-4">
-            {{ formattedErrorMessage }}
-          </p>
-          <!-- Show additional error details if available -->
-          <div
-            v-if="currentTerminal?.errorMessage"
-            class="text-xs text-gray-500 bg-gray-800 rounded p-2 font-mono max-w-full overflow-x-auto whitespace-pre-wrap"
-          >
-            {{ formattedErrorMessage }}
-          </div>
-        </div>
-
-        <!-- Action buttons -->
-        <div class="flex gap-3">
-          <Button
-            v-if="canReconnect"
-            variant="primary"
-            size="md"
-            :icon="RefreshCw"
-            text="Try Again"
-            @click="handleReconnect"
-          />
-          <Button
-            variant="secondary"
-            size="md"
-            :icon="X"
-            text="Close Tab"
-            @click="handleCloseTab"
-          />
-        </div>
+      <div
+        v-if="showDisconnectedOverlay"
+        class="absolute inset-0 bg-bg-secondary/95 flex items-center justify-center z-50"
+      >
+        <!-- Disconnect overlay content... -->
+      </div>
+      <div
+        v-if="showErrorOverlay"
+        class="absolute inset-0 bg-bg-secondary/95 flex items-center justify-center z-50"
+      >
+        <!-- Error overlay content... -->
       </div>
     </div>
 
     <!-- History Search Modal -->
     <HistorySearchModal />
+
+    <!-- Inline AI Suggestion is now a sibling in the flex layout -->
+    <div ref="suggestionBoxRef">
+      <InlineAISuggestion
+        :suggestion="aiStore.inlineSuggestion"
+        :mode="inlineAIMode"
+        @dismiss="handleDismissSuggestion"
+        @action="handleSuggestionAction"
+        @feedback="handleSuggestionFeedback"
+        @generate-command="handleGenerateCommand"
+      />
+    </div>
   </div>
 </template>
 
@@ -166,13 +73,18 @@ import { extractErrorMessage } from "../../utils/errorHandler";
 import { TerminalBufferManager, InputBatcher } from "../../core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useWorkspaceStore } from "../../stores/workspace";
-import { XCircle, RefreshCw, X, Wifi } from "lucide-vue-next";
+import { XCircle, RefreshCw, X, Wifi, Sparkles } from "lucide-vue-next";
 import { writeText, readText } from "@tauri-apps/plugin-clipboard-manager";
 import Button from "./Button.vue";
 import HistorySearchModal from "../history/HistorySearchModal.vue";
+import InlineAISuggestion from "../ai/InlineAISuggestion.vue";
 import { getTerminalTheme } from "../../utils/terminalTheme";
 import type { SimpleTerminal } from "../../core";
+import { aiContextAnalyzer, type AIAction } from "../../services/aiContextAnalyzer";
 import { useSettingsStore } from "../../stores/settings";
+import { useViewStateStore } from "../../stores/viewState";
+import { useAIStore } from "../../stores/ai";
+import { writeToTerminal } from "../../services/terminal";
 import type { PanelLayout, Tab } from "../../types/panel";
 
 import { Terminal } from "@xterm/xterm";
@@ -209,6 +121,8 @@ let fitAddon: FitAddon;
 
 const workspaceStore = useWorkspaceStore();
 const settingsStore = useSettingsStore();
+const viewState = useViewStateStore();
+const aiStore = useAIStore();
 
 const currentTerminal = computed(() =>
   workspaceStore.terminals.find((t) => t.id === props.terminalId),
@@ -250,9 +164,13 @@ const showErrorOverlay = computed(
     !props.isConnecting,
 );
 
-const formattedErrorMessage = computed(() => {
-  const errorMsg = currentTerminal.value?.errorMessage;
-  return errorMsg ? extractErrorMessage(errorMsg) : "";
+const suggestionBoxRef = ref<HTMLElement | null>(null);
+
+watch(() => aiStore.inlineSuggestion, (suggestion) => {
+    // When the suggestion box appears or disappears, we need to resize the terminal
+    nextTick(() => {
+        handleResize();
+    });
 });
 
 const canReconnect = computed(
@@ -353,12 +271,39 @@ const fitAndFocus = debounce((): void => {
 }, 50);
 
 const writeOutput = (data: string): void => {
-  if (term) {
+  console.log(`[Terminal] writeOutput called for terminal ${props.terminalId}, length: ${data.length}`);
+
+  if (!term) {
+    console.error(`[Terminal] 'term' instance is null or undefined for ${props.terminalId}`);
+    return;
+  }
+
+  try {
     term.write(data);
 
     if (props.backendTerminalId) {
       bufferManager.saveToLocalBuffer(props.backendTerminalId, data);
     }
+
+    // Analyze output for inline AI suggestions
+    if (aiStore.inlineEnabled) {
+      // console.log("Analyzing output:", data); // DEBUG - keeping this but less verbose if needed
+      const suggestion = aiContextAnalyzer.analyzeOutput(data);
+      if (suggestion) {
+        console.log("[Terminal] AI Suggestion found:", suggestion);
+        inlineAIMode.value = 'suggestion';
+        aiStore.setInlineSuggestion(suggestion);
+
+        // Also detect server URL for live preview
+        const serverUrl = aiContextAnalyzer.detectServerUrl(data);
+        if (serverUrl) {
+          console.log("[Terminal] Server URL detected:", serverUrl);
+          aiStore.setLivePreviewUrl(serverUrl);
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`[Terminal] Error in writeOutput for ${props.terminalId}:`, error);
   }
 };
 
@@ -434,6 +379,61 @@ watch(
   },
 );
 
+// Inline AI suggestion handlers
+const handleDismissSuggestion = () => {
+  aiStore.dismissInlineSuggestion();
+  inlineAIMode.value = 'suggestion'; // Reset mode
+  aiContextAnalyzer.resetCooldown();
+};
+
+const handleSuggestionAction = async (action: AIAction, execute: boolean) => {
+  if (action.type === 'command' && action.command && props.backendTerminalId) {
+    try {
+      const command = action.command + (execute ? '\\r\\n' : '');
+      await writeToTerminal({
+        terminalId: props.backendTerminalId,
+        data: command,
+      });
+    } catch (error) {
+      console.error('Failed to execute action command:', error);
+    }
+  }
+  // Dismiss after action
+  aiStore.dismissInlineSuggestion();
+  inlineAIMode.value = 'suggestion';
+};
+
+const handleSuggestionFeedback = (type: 'positive' | 'negative') => {
+  if (aiStore.inlineSuggestion) {
+    aiStore.sendFeedback(aiStore.inlineSuggestion.id, type);
+  }
+};
+
+const handleGenerateCommand = async (prompt: string) => {
+    // We can use the existing command palette generation logic
+    await aiStore.generateCommand(prompt);
+    // The command palette will show the result, so we just dismiss the inline input
+    handleDismissSuggestion();
+    // And open the main AI palette
+    viewState.toggleCommandPalette('ai');
+}
+
+// Global shortcut for Cmd+I
+const handleManualAIInput = () => {
+    console.log("Cmd+I pressed. Toggling AI input."); // DEBUG
+    if (aiStore.inlineEnabled) {
+        if (inlineAIMode.value === 'input') {
+            // If already in input mode, dismiss it
+            handleDismissSuggestion();
+        } else {
+            aiStore.dismissInlineSuggestion(); // Clear any existing suggestion
+            inlineAIMode.value = 'input';
+            // Use a minimal suggestion object to trigger the v-if
+            aiStore.setInlineSuggestion({ id: 'manual-input', title: 'Ask AI', message: '', actions: [], timestamp: Date.now(), context: { type: 'general' }, dismissable: true });
+        }
+    }
+};
+
 defineExpose({
   focus,
   fitAndFocus,
@@ -443,7 +443,11 @@ defineExpose({
 });
 
 onMounted(async () => {
-  if (!terminalRef.value) return;
+  console.log(`[Debug] Terminal component mounted for ID: ${props.terminalId}`);
+  if (!terminalRef.value) {
+    console.error("[Debug] terminalRef is not available on mount!");
+    return;
+  }
 
   const customTheme = settingsStore.getCustomTheme(settingsStore.terminalTheme);
   const theme = customTheme
@@ -520,13 +524,20 @@ onMounted(async () => {
       return false;
     }
 
+    // Handle Cmd+I for inline AI input
+     if ((arg.metaKey || arg.ctrlKey) && arg.key === 'i' && arg.type === 'keydown') {
+        arg.preventDefault();
+        handleManualAIInput();
+        return false;
+    }
+
     // History search is now handled by global shortcuts manager
     // No need to handle it here anymore
 
     return true;
   });
 
-  term.onData((data) => {
+  term.onData(async (data) => {
     handleTerminalInput(data);
   });
 

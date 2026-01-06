@@ -267,3 +267,11 @@ pub async fn get_ssh_config_hosts(
         Err(e) => Err(e.to_string()),
     }
 }
+
+/// Scan local ~/.ssh directory for SSH keys
+#[tauri::command]
+pub async fn scan_local_ssh_keys(
+    _state: State<'_, AppState>,
+) -> Result<Vec<crate::services::ssh::LocalSSHKey>, String> {
+    crate::services::ssh::scan_local_ssh_keys()
+}

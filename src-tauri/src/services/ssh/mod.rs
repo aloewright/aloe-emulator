@@ -1,5 +1,6 @@
 pub mod connection_pool;
 pub mod key;
+pub mod local_keys;
 
 use anyhow;
 use std::sync::Arc;
@@ -7,6 +8,7 @@ use tokio::sync::Mutex;
 
 pub use connection_pool::SSHConnectionPool;
 pub use key::SSHKeyService;
+pub use local_keys::{scan_local_ssh_keys, LocalSSHKey};
 
 use crate::database::{error::DatabaseResult, service::DatabaseService};
 use crate::models::ssh::{

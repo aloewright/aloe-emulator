@@ -1517,7 +1517,10 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     handleSSHConnectionSuccess,
     resizeTerminal: (request: ResizeTerminalRequest) => resizeTerminal(request),
     listenToTerminalOutput: (callback: (data: TerminalData) => void) =>
-      listenToTerminalOutput(callback),
+      listenToTerminalOutput((data) => {
+        // console.log(`[WorkspaceStore] Received terminal output for ${data.terminalId}, size: ${data.data.length}`);
+        callback(data);
+      }),
 
     findPanelInLayout: (panelId: string) =>
       findPanelInLayout(panelLayout.value, panelId),

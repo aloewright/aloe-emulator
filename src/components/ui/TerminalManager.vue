@@ -146,8 +146,11 @@ onMounted(async () => {
         const terminalRef = terminalRefs.value[matchingTerminal.id];
 
         if (terminalRef && "writeOutput" in terminalRef) {
+          console.log(`[TerminalManager] Forwarding output to terminal ${matchingTerminal.id} (backend: ${backendTerminalId})`);
           const output = bytesToString(terminalData.data);
           (terminalRef as TerminalComponent).writeOutput(output);
+        } else {
+          console.warn(`[TerminalManager] Terminal ref not found or missing writeOutput for ${matchingTerminal.id}`);
         }
       },
     );

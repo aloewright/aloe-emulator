@@ -29,9 +29,10 @@ pub async fn generate_command(
     provider: String,
     model: String,
     prompt: String,
-    _context: Option<String>,
+    context: Option<String>,
     api_key: Option<String>,
 ) -> Result<String, String> {
+    let _ = context; // Suppress unused warning
     println!(
         "[AI] Generating command with provider: '{}', model: '{}'",
         provider, model
