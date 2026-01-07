@@ -15,11 +15,11 @@ onMounted(() => {
     type: "modal",
     title: "AI Assistant",
     props: {
-        size: "lg",
-        showCloseButton: false,
-        closeOnBackdrop: true,
-        closeOnEsc: true
-    }
+      size: "lg",
+      showCloseButton: false,
+      closeOnBackdrop: true,
+      closeOnEsc: true,
+    },
   });
 });
 

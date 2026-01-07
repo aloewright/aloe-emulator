@@ -28,35 +28,48 @@ impl TerminalBuffer {
     }
 
     fn append_data(&mut self, data: &str, max_lines: usize) {
-        let new_lines: Vec<&str> = data.split('\n').collect();
+        let mut lines_iter = data.split('\n');
 
-        if !self.lines.is_empty() && !data.starts_with('\n') && !new_lines.is_empty() {
-            if let Some(last_line) = self.lines.last_mut() {
-                last_line.push_str(new_lines[0]);
-                self.total_bytes += new_lines[0].len();
+        // Always try to merge the first part of the split with the last line of the buffer.
+        // split('\n') always returns at least one element.
+        // e.g., "abc".split('\n') -> ["abc"]
+        //       "\nabc".split('\n') -> ["", "abc"]
+        //       "abc\n".split('\n') -> ["abc", ""]
+        //
+        // By merging the first element, we correctly handle continuation of the last line.
+        // If the data starts with '\n', the first element is "", so merging adds nothing,
+        // effectively terminating the previous line.
+        if !self.lines.is_empty() {
+            if let Some(first_part) = lines_iter.next() {
+                if let Some(last_line) = self.lines.last_mut() {
+                    last_line.push_str(first_part);
+                    self.total_bytes += first_part.len();
+                }
             }
+        }
 
-            for line in new_lines.iter().skip(1) {
-                self.lines.push(line.to_string());
-                self.total_bytes += line.len() + 1; // +1 for newline
-            }
-        } else {
-            for line in new_lines {
-                self.lines.push(line.to_string());
-                self.total_bytes += line.len() + 1; // +1 for newline
-            }
+        // Push the rest of the lines (if any)
+        for line in lines_iter {
+            self.lines.push(line.to_string());
+            self.total_bytes += line.len() + 1; // +1 for newline
         }
 
         if self.lines.len() > max_lines {
             let lines_to_remove = self.lines.len() - max_lines;
-            for _ in 0..lines_to_remove {
-                if !self.lines.is_empty() {
-                    let removed_line = self.lines.remove(0);
-                    self.total_bytes = self.total_bytes.saturating_sub(removed_line.len() + 1);
-                }
-            }
+
+            // Calculate bytes to remove before draining
+            let bytes_removed: usize = self.lines
+                .iter()
+                .take(lines_to_remove)
+                .map(|s| s.len() + 1)
+                .sum();
+
+            // Efficiently remove multiple items from the beginning
+            self.lines.drain(0..lines_to_remove);
+            self.total_bytes = self.total_bytes.saturating_sub(bytes_removed);
         }
     }
+
     fn get_lines(&self) -> &Vec<String> {
         &self.lines
     }
@@ -197,5 +210,64 @@ impl TerminalBufferManager {
 impl Default for TerminalBufferManager {
     fn default() -> Self {
         Self::new(1000) // Default to 1000 lines per terminal
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_append_data_simple() {
+        let mut buffer = TerminalBuffer::new();
+        buffer.append_data("line1", 100);
+        assert_eq!(buffer.lines, vec!["line1"]);
+
+        buffer.append_data("\nline2", 100);
+        assert_eq!(buffer.lines, vec!["line1", "line2"]);
+    }
+
+    #[test]
+    fn test_append_data_merge() {
+        let mut buffer = TerminalBuffer::new();
+        buffer.append_data("hel", 100);
+        buffer.append_data("lo", 100);
+        assert_eq!(buffer.lines, vec!["hello"]);
+    }
+
+    #[test]
+    fn test_append_data_with_newlines() {
+        let mut buffer = TerminalBuffer::new();
+        buffer.append_data("one\ntwo\nthree", 100);
+        assert_eq!(buffer.lines, vec!["one", "two", "three"]);
+    }
+
+    #[test]
+    fn test_max_lines_limit() {
+        let mut buffer = TerminalBuffer::new();
+        // 3 lines + empty line at end
+        buffer.append_data("1\n2\n3\n", 5);
+        // buffer: ["1", "2", "3", ""]
+        assert_eq!(buffer.lines, vec!["1", "2", "3", ""]);
+
+        buffer.append_data("4\n5\n", 5);
+        // buffer before crop: ["1", "2", "3", "4", "5", ""]
+        // crop to 5: remove "1"
+        assert_eq!(buffer.lines, vec!["2", "3", "4", "5", ""]);
+    }
+
+    #[test]
+    fn test_memory_usage() {
+        let mut buffer = TerminalBuffer::new();
+        buffer.append_data("a", 100);
+        // code: total_bytes += line.len() + 1
+        // "a" -> 1+1 = 2.
+        assert_eq!(buffer.total_bytes, 2);
+
+        buffer.append_data("b", 100);
+        // "ab" -> merged.
+        // total_bytes += "b".len() = 1. Total 3.
+        // lines: ["ab"]. "ab" len 2. +1 = 3. Consistent.
+        assert_eq!(buffer.total_bytes, 3);
     }
 }
