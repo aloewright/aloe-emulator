@@ -1,0 +1,4 @@
+## 2024-05-23 - Command Injection in SFTP Search
+**Vulnerability:** The SFTP search function constructed a grep command using double quotes for user input: `grep -rInH "{query}" "{path}"`. This allowed command injection via shell metacharacters like `$(id)` or backticks within the double quotes, as the escaping was insufficient (only escaping `"`).
+**Learning:** When constructing shell commands from user input, double quotes are not safe because they allow parameter expansion and command substitution. Simple character replacement is often insufficient.
+**Prevention:** Use single quotes `'` to wrap user input in shell commands, as they treat all characters within them as literals. Escape single quotes inside the string by replacing `'` with `'\''`. Always prefer using APIs that separate command and arguments if available, but for SSH `exec` which takes a string, rigorous escaping is required.

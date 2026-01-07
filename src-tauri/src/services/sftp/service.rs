@@ -707,9 +707,13 @@ impl SFTPService {
             })?;
 
         // Escape query to prevent command injection
-        // This is a basic escaping, ideally we'd use a robust shell escaping library
-        let escaped_query = query.replace("\"", "\\\"");
-        let command = format!("grep -rInH \"{}\" \"{}\"", escaped_query, path);
+        // Use single quotes for the query to prevent variable expansion and command substitution
+        // Replace single quotes with '\'': 'foo'bar' -> 'foo'\''bar'
+        let escaped_query = format!("'{}'", query.replace("'", "'\\''"));
+        // Path should also be escaped similarly
+        let escaped_path = format!("'{}'", path.replace("'", "'\\''"));
+
+        let command = format!("grep -rInH {} {}", escaped_query, escaped_path);
 
         channel
             .exec(true, command)
