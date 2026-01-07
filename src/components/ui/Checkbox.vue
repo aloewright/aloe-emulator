@@ -8,6 +8,11 @@
         type="checkbox"
         :disabled="disabled"
         :readonly="readonly"
+        :aria-describedby="
+          (helperText && !errorMessage ? `${inputId}-helper ` : '') +
+          (errorMessage ? `${inputId}-error` : '')
+        "
+        :aria-invalid="!!errorMessage"
         :class="[
           'mr-2 block rounded-lg border transition-all duration-200',
           'focus:outline-none',
@@ -38,12 +43,21 @@
 
     <div v-if="helper" class="min-h-5">
       <!-- Helper text (only show if no error) -->
-      <p v-if="helperText && !errorMessage" class="text-xs text-gray-400">
+      <p
+        v-if="helperText && !errorMessage"
+        :id="`${inputId}-helper`"
+        class="text-xs text-gray-400"
+      >
         {{ helperText }}
       </p>
 
       <!-- Error message -->
-      <p v-if="errorMessage" class="text-xs text-red-400 flex items-center">
+      <p
+        v-if="errorMessage"
+        :id="`${inputId}-error`"
+        role="alert"
+        class="text-xs text-red-400 flex items-center"
+      >
         <TriangleAlert class="mr-1" :size="12" />
         {{ errorMessage }}
       </p>

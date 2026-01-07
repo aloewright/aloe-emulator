@@ -35,6 +35,11 @@
         :readonly="readonly"
         :autocomplete="autocomplete"
         :autofocus="autofocus"
+        :aria-describedby="
+          (helperText && !errorMessage ? `${inputId}-helper ` : '') +
+          (errorMessage ? `${inputId}-error` : '')
+        "
+        :aria-invalid="!!errorMessage"
         :class="[
           'block w-full rounded-lg border transition-all duration-200 touch-manipulation',
           'focus:outline-none',
@@ -63,6 +68,7 @@
           variant="ghost"
           class="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer"
           tabindex="-1"
+          :aria-label="isPasswordVisible ? 'Hide password' : 'Show password'"
           @click="togglePasswordVisibility"
         >
           <component :is="isPasswordVisible ? EyeOff : Eye" :size="iconSize" />
@@ -84,12 +90,21 @@
 
     <div v-if="helper" :class="space && 'min-h-5'">
       <!-- Helper text (only show if no error) -->
-      <p v-if="helperText && !errorMessage" class="text-xs text-gray-400">
+      <p
+        v-if="helperText && !errorMessage"
+        :id="`${inputId}-helper`"
+        class="text-xs text-gray-400"
+      >
         {{ helperText }}
       </p>
 
       <!-- Error message -->
-      <p v-if="errorMessage" class="text-xs text-red-400 flex items-center">
+      <p
+        v-if="errorMessage"
+        :id="`${inputId}-error`"
+        role="alert"
+        class="text-xs text-red-400 flex items-center"
+      >
         <TriangleAlert class="mr-1" :size="12" />
         {{ errorMessage }}
       </p>
