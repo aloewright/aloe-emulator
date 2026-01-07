@@ -470,12 +470,14 @@ onMounted(async () => {
 
   term.open(terminalRef.value);
 
-  term.onSelectionChange(async () => {
-    if (term.hasSelection()) {
+  const handleSelectionChange = debounce(async () => {
+    if (term && term.hasSelection()) {
       const selectedText = term.getSelection();
       await writeText(selectedText);
     }
-  });
+  }, 300);
+
+  term.onSelectionChange(handleSelectionChange);
 
   term.attachCustomKeyEventHandler((arg: KeyboardEvent): boolean => {
     // Handle Ctrl+Shift+V / Cmd+Shift+V for paste (terminal-specific, always enabled)
