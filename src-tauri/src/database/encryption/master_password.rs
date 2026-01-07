@@ -392,8 +392,24 @@ impl MasterPasswordManager {
     }
 
     /// Validate password strength
-    fn validate_password(&self, _password: &str) -> EncryptionResult<()> {
-        // Dev mode: Allow any password
+    fn validate_password(&self, password: &str) -> EncryptionResult<()> {
+        if password.len() < 8 {
+            return Err(EncryptionError::InvalidKey(
+                "Password must be at least 8 characters long".to_string(),
+            ));
+        }
+
+        let has_uppercase = password.chars().any(|c| c.is_uppercase());
+        let has_lowercase = password.chars().any(|c| c.is_lowercase());
+        let has_digit = password.chars().any(|c| c.is_numeric());
+        let has_special = password.chars().any(|c| !c.is_alphanumeric());
+
+        if !has_uppercase || !has_lowercase || !has_digit || !has_special {
+            return Err(EncryptionError::InvalidKey(
+                "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character".to_string(),
+            ));
+        }
+
         Ok(())
     }
 }
@@ -480,5 +496,41 @@ impl EncryptionService for MasterPasswordManager {
 
         String::from_utf8(decrypted)
             .map_err(|e| EncryptionError::DecryptionFailed(format!("Invalid UTF-8: {}", e)).into())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::database::config::MasterPasswordConfig;
+
+    fn create_test_manager() -> MasterPasswordManager {
+        MasterPasswordManager::new(
+            "test_device".to_string(),
+            MasterPasswordConfig::default(),
+        )
+    }
+
+    #[test]
+    fn test_validate_password_strength() {
+        let manager = create_test_manager();
+
+        // Too short
+        assert!(manager.validate_password("Short1!").is_err());
+
+        // No uppercase
+        assert!(manager.validate_password("longpassword1!").is_err());
+
+        // No lowercase
+        assert!(manager.validate_password("LONGPASSWORD1!").is_err());
+
+        // No digit
+        assert!(manager.validate_password("LongPassword!").is_err());
+
+        // No special char
+        assert!(manager.validate_password("LongPassword1").is_err());
+
+        // Valid password
+        assert!(manager.validate_password("LongPassword1!").is_ok());
     }
 }
