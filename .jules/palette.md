@@ -1,0 +1,3 @@
+## 2024-05-22 - [Refactoring clickable divs to buttons]
+**Learning:** Using `div` elements for interactive navigation items is a common accessibility anti-pattern. While they can be styled to look like buttons, they lack native keyboard focus support, semantic meaning for screen readers, and standard interaction behaviors (like Enter/Space activation).
+**Action:** Always use `<button type="button">` for interactive elements that trigger actions or navigation within the app. If custom styling is needed, use utility classes to reset default button styles (like `appearance-none`, `bg-transparent`, `border-none`) while maintaining accessibility features like `focus-visible`.
