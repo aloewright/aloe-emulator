@@ -392,9 +392,64 @@ impl MasterPasswordManager {
     }
 
     /// Validate password strength
-    fn validate_password(&self, _password: &str) -> EncryptionResult<()> {
-        // Dev mode: Allow any password
+    fn validate_password(&self, password: &str) -> EncryptionResult<()> {
+        if password.len() < 8 {
+            return Err(EncryptionError::InvalidKey(
+                "Password must be at least 8 characters long".to_string(),
+            ));
+        }
+
+        let has_uppercase = password.chars().any(|c| c.is_uppercase());
+        let has_lowercase = password.chars().any(|c| c.is_lowercase());
+        let has_digit = password.chars().any(|c| c.is_numeric());
+        let has_special = password.chars().any(|c| !c.is_alphanumeric());
+
+        if !has_uppercase || !has_lowercase || !has_digit || !has_special {
+            return Err(EncryptionError::InvalidKey(
+                "Password must contain uppercase, lowercase, digit, and special characters".to_string(),
+            ));
+        }
+
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Mock config for testing
+    fn get_test_config() -> MasterPasswordConfig {
+        MasterPasswordConfig {
+            auto_unlock: false,
+            require_on_startup: true,
+            session_timeout_minutes: None,
+            use_keychain: false,
+        }
+    }
+
+    #[test]
+    fn test_password_validation() {
+        let manager =
+            MasterPasswordManager::new("test_device".to_string(), get_test_config());
+
+        // Too short
+        assert!(manager.validate_password("Short1!").is_err());
+
+        // No uppercase
+        assert!(manager.validate_password("lower123!").is_err());
+
+        // No lowercase
+        assert!(manager.validate_password("UPPER123!").is_err());
+
+        // No digit
+        assert!(manager.validate_password("NoDigit!").is_err());
+
+        // No special
+        assert!(manager.validate_password("NoSpecial123").is_err());
+
+        // Valid
+        assert!(manager.validate_password("ValidPass1!").is_ok());
     }
 }
 
