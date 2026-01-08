@@ -8,6 +8,7 @@ use crate::models::terminal::{
 use crate::services::buffer_manager::TerminalBufferManager;
 use crate::services::recording::SessionRecorder;
 use crate::services::ssh::SSHKeyService;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter};
@@ -202,9 +203,11 @@ impl TerminalManager {
                 }
 
                 // Process buffer saving with smart filtering
-                if let Ok(data_str) = String::from_utf8(data.clone()) {
+                // OPTIMIZATION: Use std::str::from_utf8 to avoid allocating a String from data.clone()
+                // and use Cow in process to avoid further allocations when not needed
+                if let Ok(data_str) = std::str::from_utf8(&data) {
                     let mut filter = alt_screen_filter.lock().await;
-                    let filtered_data = filter.process(&data_str);
+                    let filtered_data = filter.process(data_str);
 
                     if !filtered_data.is_empty() {
                         buffer_manager_clone
@@ -406,8 +409,14 @@ impl AltScreenFilter {
         }
     }
 
-    fn process(&mut self, data: &str) -> String {
-        let mut result = String::new();
+    fn process<'a>(&mut self, data: &'a str) -> Cow<'a, str> {
+        // Optimization: If we're not in alt screen and there are no control sequences,
+        // just return the borrowed string without allocation.
+        if !self.in_alt_screen && !data.contains("\x1b[?1049") {
+            return Cow::Borrowed(data);
+        }
+
+        let mut result = String::with_capacity(data.len());
         let mut current_pos = 0;
         let enter_seq = "\x1b[?1049h";
         let exit_seq = "\x1b[?1049l";
@@ -441,7 +450,7 @@ impl AltScreenFilter {
             }
         }
 
-        result
+        Cow::Owned(result)
     }
 }
 

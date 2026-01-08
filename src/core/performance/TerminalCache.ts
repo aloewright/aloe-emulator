@@ -32,7 +32,10 @@ export interface CacheStats {
 export class TerminalCache {
   private static instance: TerminalCache | null = null;
 
-  private readonly terminalInfoCache = new Map<string, CacheEntry<TerminalInfo>>();
+  private readonly terminalInfoCache = new Map<
+    string,
+    CacheEntry<TerminalInfo>
+  >();
   private bufferStatsCache: CacheEntry<{
     lines: number;
     cols: number;
