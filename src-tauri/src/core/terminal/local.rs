@@ -82,7 +82,10 @@ impl LocalTerminal {
         if let Some(command) = &self.local_config.command {
             if !command.is_empty() {
                 if shell.contains("zsh") || shell.contains("bash") || shell.ends_with("/sh") {
-                    let new_cmd = format!("{}; exec {} -l", command, shell);
+                    // Sentinel: Use shell_words to quote the shell path to prevent command injection
+                    // if shell path contains special characters.
+                    let quoted_shell = shell_words::quote(&shell);
+                    let new_cmd = format!("{}; exec {} -l", command, quoted_shell);
                     cmd.arg("-c");
                     cmd.arg(&new_cmd);
                 } else {
