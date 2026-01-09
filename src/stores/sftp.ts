@@ -596,7 +596,6 @@ export const useSFTPStore = defineStore("sftp", () => {
    * @throws Enhanced error if upload fails
    */
 
-
   /**
    * Download file with error handling
    * @param sessionId - SFTP session ID
@@ -605,7 +604,6 @@ export const useSFTPStore = defineStore("sftp", () => {
    * @returns Transfer ID
    * @throws Enhanced error if download fails
    */
-
 
   /**
    * Cancel transfer with error handling
@@ -637,14 +635,12 @@ export const useSFTPStore = defineStore("sftp", () => {
    * @throws Enhanced error if comparison fails
    */
 
-
   /**
    * Sync directories with error handling
    * @param sessionId - SFTP session ID
    * @param operation - Sync operation configuration
    * @throws Enhanced error if sync fails
    */
-
 
   /**
    * Rename file or directory with error handling
@@ -768,7 +764,6 @@ export const useSFTPStore = defineStore("sftp", () => {
    * @throws Enhanced error if read fails
    */
 
-
   /**
    * Write file content as text (remote) with error handling
    * @param sessionId - SFTP session ID
@@ -776,7 +771,6 @@ export const useSFTPStore = defineStore("sftp", () => {
    * @param content - File content to write
    * @throws Enhanced error if write fails
    */
-
 
   let unsubscribeTransferRealtime: (() => void) | null = null;
 
@@ -887,13 +881,11 @@ export const useSFTPStore = defineStore("sftp", () => {
    * @throws Enhanced error if pause fails
    */
 
-
   /**
    * Resume transfer with error handling
    * @param transferId - Transfer ID to resume
    * @throws Enhanced error if resume fails
    */
-
 
   /**
    * Set transfer priority (0-255, higher = higher priority)
@@ -902,13 +894,11 @@ export const useSFTPStore = defineStore("sftp", () => {
    * @throws Enhanced error if operation fails
    */
 
-
   /**
    * Get all transfers with optional status filter
    * @param statusFilter - Optional status filter
    * @returns List of transfers
    */
-
 
   /**
    * Reorder transfer queue
@@ -916,13 +906,11 @@ export const useSFTPStore = defineStore("sftp", () => {
    * @throws Enhanced error if reorder fails
    */
 
-
   /**
    * Retry failed transfer
    * @param transferId - Transfer ID to retry
    * @throws Enhanced error if retry fails
    */
-
 
   /**
    * Search for text in files
@@ -931,7 +919,6 @@ export const useSFTPStore = defineStore("sftp", () => {
    * @param query - Search query
    * @returns Search results
    */
-
 
   return {
     // State
