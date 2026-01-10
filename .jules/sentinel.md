@@ -1,0 +1,4 @@
+## 2025-10-16 - Hardcoded Default Password Wipe Logic
+**Vulnerability:** The application enforced a hardcoded default password ("aloe") for auto-unlock functionality. If a user changed their password but kept auto-unlock enabled, the application would fail to unlock with "aloe" on the next restart and, incorrectly assuming a corrupted state, would **wipe the entire database**.
+**Learning:** "Convenience" features for initial setup (like auto-unlocking with a default password) can become critical vulnerabilities and data loss vectors if they don't gracefully handle state changes (like the user changing that password). Logic that assumes "failure to unlock with default" equals "broken state" is dangerous.
+**Prevention:** Never use hardcoded credentials to control logic flow in production. Ensure that authentication failures fail securely (lock the app) rather than destructively (reset the app).
