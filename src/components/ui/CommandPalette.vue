@@ -21,13 +21,19 @@
           @keydown.enter.prevent="executeSelected"
         />
         <div class="flex items-center gap-2">
-          <span class="text-xs text-gray-500 px-1.5 py-0.5 rounded border border-gray-700">Esc</span>
+          <span
+            class="text-xs text-gray-500 px-1.5 py-0.5 rounded border border-gray-700"
+            >Esc</span
+          >
         </div>
       </div>
 
       <!-- Command List -->
       <div class="flex-1 overflow-y-auto p-2" ref="listContainer">
-        <div v-if="filteredCommands.length === 0" class="p-4 text-center text-gray-500">
+        <div
+          v-if="filteredCommands.length === 0"
+          class="p-4 text-center text-gray-500"
+        >
           No commands found matching "{{ searchQuery }}"
         </div>
 
@@ -39,7 +45,7 @@
             :class="[
               selectedIndex === index
                 ? 'bg-blue-600 text-white'
-                : 'text-gray-300 hover:bg-gray-800'
+                : 'text-gray-300 hover:bg-gray-800',
             ]"
             @click="executeCommand(command)"
             @mousemove="selectedIndex = index"
@@ -48,9 +54,15 @@
               <component
                 :is="getCategoryIcon(command.category)"
                 class="w-4 h-4"
-                :class="selectedIndex === index ? 'text-blue-200' : 'text-gray-500'"
+                :class="
+                  selectedIndex === index ? 'text-blue-200' : 'text-gray-500'
+                "
               />
-              <span :class="selectedIndex === index ? 'text-white' : 'text-gray-200'">
+              <span
+                :class="
+                  selectedIndex === index ? 'text-white' : 'text-gray-200'
+                "
+              >
                 {{ command.label }}
               </span>
             </div>
@@ -59,7 +71,11 @@
               <span
                 v-if="command.shortcut"
                 class="text-xs px-1.5 py-0.5 rounded"
-                :class="selectedIndex === index ? 'bg-blue-500 text-blue-100' : 'bg-gray-800 text-gray-400'"
+                :class="
+                  selectedIndex === index
+                    ? 'bg-blue-500 text-blue-100'
+                    : 'bg-gray-800 text-gray-400'
+                "
               >
                 {{ command.shortcut }}
               </span>
@@ -69,7 +85,9 @@
       </div>
 
       <!-- Footer -->
-      <div class="px-4 py-2 border-t border-gray-700 text-xs text-gray-500 flex justify-between">
+      <div
+        class="px-4 py-2 border-t border-gray-700 text-xs text-gray-500 flex justify-between"
+      >
         <span>{{ filteredCommands.length }} commands</span>
         <div class="flex gap-3">
           <span><kbd class="font-sans">↑↓</kbd> to navigate</span>
@@ -82,7 +100,15 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
-import { Search, Terminal, Navigation, Settings, Command, FileText, Globe } from "lucide-vue-next";
+import {
+  Search,
+  Terminal,
+  Navigation,
+  Settings,
+  Command,
+  FileText,
+  Globe,
+} from "lucide-vue-next";
 import Modal from "./Modal.vue";
 import { useKeyboardShortcutsStore } from "../../stores/keyboardShortcuts";
 import { useGlobalShortcuts } from "../../composables/useGlobalShortcuts";
@@ -100,12 +126,12 @@ const { closeOverlay } = useOverlay();
 
 // Get all available commands from the store
 const allCommands = computed(() => {
-  return shortcutsStore.activeShortcuts.map(shortcut => ({
+  return shortcutsStore.activeShortcuts.map((shortcut) => ({
     id: shortcut.id,
     label: shortcut.label,
     category: shortcut.category,
     shortcut: formatShortcut(shortcut),
-    original: shortcut
+    original: shortcut,
   }));
 });
 
@@ -116,7 +142,7 @@ const filteredCommands = computed(() => {
   const query = searchQuery.value.toLowerCase();
 
   return allCommands.value
-    .filter(cmd => {
+    .filter((cmd) => {
       // Simple fuzzy matching: check if characters appear in order
       const text = cmd.label.toLowerCase();
       let i = 0;
@@ -150,17 +176,23 @@ watch(searchQuery, () => {
 });
 
 // Focus input when mounted/visible
-watch(() => searchInput.value, (el) => {
-  if (el) {
-    nextTick(() => el.focus());
-  }
-});
+watch(
+  () => searchInput.value,
+  (el) => {
+    if (el) {
+      nextTick(() => el.focus());
+    }
+  },
+);
 
-const navigate = (direction: 'up' | 'down') => {
-  if (direction === 'up') {
+const navigate = (direction: "up" | "down") => {
+  if (direction === "up") {
     selectedIndex.value = Math.max(0, selectedIndex.value - 1);
   } else {
-    selectedIndex.value = Math.min(filteredCommands.value.length - 1, selectedIndex.value + 1);
+    selectedIndex.value = Math.min(
+      filteredCommands.value.length - 1,
+      selectedIndex.value + 1,
+    );
   }
 
   scrollToSelected();
@@ -170,9 +202,11 @@ const scrollToSelected = () => {
   nextTick(() => {
     if (!listContainer.value) return;
 
-    const selectedEl = listContainer.value.children[0]?.children[selectedIndex.value] as HTMLElement;
+    const selectedEl = listContainer.value.children[0]?.children[
+      selectedIndex.value
+    ] as HTMLElement;
     if (selectedEl) {
-      selectedEl.scrollIntoView({ block: 'nearest' });
+      selectedEl.scrollIntoView({ block: "nearest" });
     }
   });
 };
@@ -193,12 +227,18 @@ const executeCommand = (command: any) => {
 
 const getCategoryIcon = (category: string) => {
   switch (category.toLowerCase()) {
-    case 'terminal': return Terminal;
-    case 'navigation': return Navigation;
-    case 'settings': return Settings;
-    case 'file': return FileText;
-    case 'web': return Globe;
-    default: return Command;
+    case "terminal":
+      return Terminal;
+    case "navigation":
+      return Navigation;
+    case "settings":
+      return Settings;
+    case "file":
+      return FileText;
+    case "web":
+      return Globe;
+    default:
+      return Command;
   }
 };
 </script>

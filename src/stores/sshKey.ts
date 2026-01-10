@@ -197,8 +197,6 @@ export const useSSHKeyStore = defineStore("sshKey", () => {
     return keys.value.find((k) => k.id === id);
   }
 
-
-
   /**
    * Clear all keys (used on logout)
    */
