@@ -1,0 +1,3 @@
+## 2025-05-26 - Accessible Forms
+**Learning:** Common form patterns often miss semantic associations. Simply placing a helper text below an input is not enough for screen readers. `aria-describedby` is essential for linking errors and helpers to their inputs. Also, password toggles are interactive elements that need to be keyboard accessible (no `tabindex="-1"`) and labeled (`aria-label`).
+**Action:** When creating or auditing form components, always verify: 1) `id` generation for helpers/errors, 2) `aria-describedby` linking, 3) `aria-invalid` state, and 4) keyboard reachability for all internal interactive controls.
