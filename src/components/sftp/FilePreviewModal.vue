@@ -337,6 +337,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import Prism from "prismjs";
 import {
   FileText,
   Image as ImageIcon,
@@ -632,7 +633,10 @@ function endPan() {
 }
 
 function renderMarkdown(md: string): string {
-  let html = md
+  // 1. Sanitize HTML entities to prevent direct HTML injection
+  const safeMd = Prism.util.encode(md);
+
+  const html = safeMd
     .replaceAll(/^### (.*$)/gim, "<h3>$1</h3>")
     .replaceAll(/^## (.*$)/gim, "<h2>$1</h2>")
     .replaceAll(/^# (.*$)/gim, "<h1>$1</h1>")
@@ -644,7 +648,17 @@ function renderMarkdown(md: string): string {
     .replaceAll(/`(.*?)`/gim, "<code>$1</code>")
     .replaceAll(
       /\[([^\]]{1,1000})\]\(([^)]{1,1000})\)/gim,
-      '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">$1</a>',
+      (match, text, url) => {
+        // Prevent javascript: pseudo-protocol
+        if (
+          /^\s*javascript:/i.test(url) ||
+          /^\s*vbscript:/i.test(url) ||
+          /^\s*data:/i.test(url)
+        ) {
+          return text;
+        }
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">${text}</a>`;
+      },
     )
     .replaceAll(/\n\n/gim, "</p><p>")
     .replaceAll(/\n/gim, "<br>");
