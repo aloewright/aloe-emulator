@@ -35,6 +35,10 @@
         :readonly="readonly"
         :autocomplete="autocomplete"
         :autofocus="autofocus"
+        :aria-describedby="
+          errorMessage ? errorId : helperText ? helperId : undefined
+        "
+        :aria-invalid="!!errorMessage"
         :class="[
           'block w-full rounded-lg border transition-all duration-200 touch-manipulation',
           'focus:outline-none',
@@ -62,7 +66,7 @@
           type="button"
           variant="ghost"
           class="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer"
-          tabindex="-1"
+          :aria-label="isPasswordVisible ? 'Hide password' : 'Show password'"
           @click="togglePasswordVisibility"
         >
           <component :is="isPasswordVisible ? EyeOff : Eye" :size="iconSize" />
@@ -84,12 +88,20 @@
 
     <div v-if="helper" :class="space && 'min-h-5'">
       <!-- Helper text (only show if no error) -->
-      <p v-if="helperText && !errorMessage" class="text-xs text-gray-400">
+      <p
+        v-if="helperText && !errorMessage"
+        :id="helperId"
+        class="text-xs text-gray-400"
+      >
         {{ helperText }}
       </p>
 
       <!-- Error message -->
-      <p v-if="errorMessage" class="text-xs text-red-400 flex items-center">
+      <p
+        v-if="errorMessage"
+        :id="errorId"
+        class="text-xs text-red-400 flex items-center"
+      >
         <TriangleAlert class="mr-1" :size="12" />
         {{ errorMessage }}
       </p>
@@ -157,6 +169,9 @@ const { sizeClasses, stateClasses, iconSize } = useFormStyles(props);
 // Component-specific state
 const inputRef = ref<HTMLInputElement>();
 const isPasswordVisible = ref(false);
+
+const helperId = computed(() => `${inputId.value}-helper`);
+const errorId = computed(() => `${inputId.value}-error`);
 
 const inputValue = computed({
   get: () => props.modelValue?.toString() ?? "",
