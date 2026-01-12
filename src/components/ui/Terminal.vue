@@ -1,5 +1,7 @@
 <template>
-  <div class="w-full h-full bg-bg-secondary terminal-container relative flex flex-col">
+  <div
+    class="w-full h-full bg-bg-secondary terminal-container relative flex flex-col"
+  >
     <!-- Main terminal area which contains the xterm instance and overlays -->
     <div class="flex-1 relative overflow-hidden">
       <!-- This is the dedicated element for xterm.js to attach to -->
@@ -16,7 +18,10 @@
         class="absolute top-2 right-2 z-10 bg-black/50 backdrop-blur-sm rounded-md px-2 py-1 flex items-center gap-1.5 border border-white/10"
       >
         <Wifi :size="14" :class="getLatencyColor(currentTerminal.latency)" />
-        <span class="text-xs font-mono" :class="getLatencyColor(currentTerminal.latency)">
+        <span
+          class="text-xs font-mono"
+          :class="getLatencyColor(currentTerminal.latency)"
+        >
           {{ currentTerminal.latency }}ms
         </span>
       </div>
@@ -78,7 +83,10 @@ import HistorySearchModal from "../history/HistorySearchModal.vue";
 import InlineAISuggestion from "../ai/InlineAISuggestion.vue";
 import { getTerminalTheme } from "../../utils/terminalTheme";
 import type { SimpleTerminal } from "../../core";
-import { aiContextAnalyzer, type AIAction } from "../../services/aiContextAnalyzer";
+import {
+  aiContextAnalyzer,
+  type AIAction,
+} from "../../services/aiContextAnalyzer";
 import { useSettingsStore } from "../../stores/settings";
 import { useAIStore } from "../../stores/ai";
 import { writeToTerminal } from "../../services/terminal";
@@ -160,14 +168,17 @@ const showErrorOverlay = computed(
 );
 
 const suggestionBoxRef = ref<HTMLElement | null>(null);
-const inlineAIMode = ref<'suggestion' | 'input'>('suggestion');
+const inlineAIMode = ref<"suggestion" | "input">("suggestion");
 
-watch(() => aiStore.inlineSuggestion, (suggestion) => {
+watch(
+  () => aiStore.inlineSuggestion,
+  (suggestion) => {
     // When the suggestion box appears or disappears, we need to resize the terminal
     nextTick(() => {
-        handleResize();
+      handleResize();
     });
-});
+  },
+);
 
 const canReconnect = computed(
   () =>
@@ -191,8 +202,6 @@ const handleReconnect = () => {
     );
   }
 };
-
-
 
 const bufferManager = TerminalBufferManager.getInstance();
 
@@ -271,13 +280,12 @@ let aiWorker: Worker | null = null;
 const debouncedAnalyze = debounce((data: string) => {
   if (aiWorker) {
     try {
-      aiWorker.postMessage({ type: 'analyze', data });
+      aiWorker.postMessage({ type: "analyze", data });
     } catch (err) {
       console.error("[Terminal] Failed to post message to AI Worker:", err);
     }
   }
 }, 300); // 300ms debounce
-
 
 const restoreBuffer = async (): Promise<boolean> => {
   if (!term || !props.backendTerminalId) return false;
@@ -354,54 +362,62 @@ watch(
 // Inline AI suggestion handlers
 const handleDismissSuggestion = () => {
   aiStore.dismissInlineSuggestion();
-  inlineAIMode.value = 'suggestion'; // Reset mode
+  inlineAIMode.value = "suggestion"; // Reset mode
   aiContextAnalyzer.resetCooldown();
 };
 
 const handleSuggestionAction = async (action: AIAction, execute: boolean) => {
-  if (action.type === 'command' && action.command && props.backendTerminalId) {
+  if (action.type === "command" && action.command && props.backendTerminalId) {
     try {
-      const command = action.command + (execute ? '\\r\\n' : '');
+      const command = action.command + (execute ? "\\r\\n" : "");
       await writeToTerminal({
         terminalId: props.backendTerminalId,
         data: command,
       });
     } catch (error) {
-      console.error('Failed to execute action command:', error);
+      console.error("Failed to execute action command:", error);
     }
   }
   // Dismiss after action
   aiStore.dismissInlineSuggestion();
-  inlineAIMode.value = 'suggestion';
+  inlineAIMode.value = "suggestion";
 };
 
-const handleSuggestionFeedback = (type: 'positive' | 'negative') => {
+const handleSuggestionFeedback = (type: "positive" | "negative") => {
   if (aiStore.inlineSuggestion) {
     aiStore.sendFeedback(aiStore.inlineSuggestion.id, type);
   }
 };
 
 const handleGenerateCommand = async (prompt: string) => {
-    // We can use the existing command palette generation logic
-    await aiStore.generateCommand(prompt);
-    // The command palette will show the result, so we just dismiss the inline input
-    handleDismissSuggestion();
-}
+  // We can use the existing command palette generation logic
+  await aiStore.generateCommand(prompt);
+  // The command palette will show the result, so we just dismiss the inline input
+  handleDismissSuggestion();
+};
 
 // Global shortcut for Cmd+I
 const handleManualAIInput = () => {
-    console.log("Cmd+I pressed. Toggling AI input."); // DEBUG
-    if (aiStore.inlineEnabled) {
-        if (inlineAIMode.value === 'input') {
-            // If already in input mode, dismiss it
-            handleDismissSuggestion();
-        } else {
-            aiStore.dismissInlineSuggestion(); // Clear any existing suggestion
-            inlineAIMode.value = 'input';
-            // Use a minimal suggestion object to trigger the v-if
-            aiStore.setInlineSuggestion({ id: 'manual-input', title: 'Ask AI', message: '', actions: [], timestamp: Date.now(), context: { type: 'general' }, dismissable: true });
-        }
+  console.log("Cmd+I pressed. Toggling AI input."); // DEBUG
+  if (aiStore.inlineEnabled) {
+    if (inlineAIMode.value === "input") {
+      // If already in input mode, dismiss it
+      handleDismissSuggestion();
+    } else {
+      aiStore.dismissInlineSuggestion(); // Clear any existing suggestion
+      inlineAIMode.value = "input";
+      // Use a minimal suggestion object to trigger the v-if
+      aiStore.setInlineSuggestion({
+        id: "manual-input",
+        title: "Ask AI",
+        message: "",
+        actions: [],
+        timestamp: Date.now(),
+        context: { type: "general" },
+        dismissable: true,
+      });
     }
+  }
 };
 
 defineExpose({
@@ -495,10 +511,14 @@ onMounted(async () => {
     }
 
     // Handle Cmd+I for inline AI input
-     if ((arg.metaKey || arg.ctrlKey) && arg.key === 'i' && arg.type === 'keydown') {
-        arg.preventDefault();
-        handleManualAIInput();
-        return false;
+    if (
+      (arg.metaKey || arg.ctrlKey) &&
+      arg.key === "i" &&
+      arg.type === "keydown"
+    ) {
+      arg.preventDefault();
+      handleManualAIInput();
+      return false;
     }
 
     // History search is now handled by global shortcuts manager
@@ -520,32 +540,35 @@ onMounted(async () => {
   // Initialize AI Worker
   if (window.Worker) {
     try {
-      aiWorker = new Worker(new URL('../../workers/ai.worker.ts', import.meta.url), { type: 'module' });
+      aiWorker = new Worker(
+        new URL("../../workers/ai.worker.ts", import.meta.url),
+        { type: "module" },
+      );
 
       aiWorker.onerror = (err) => {
         console.error("[Terminal] AI Worker error:", err);
       };
 
       aiWorker.onmessage = (e) => {
-        if (!e || !e.data || typeof e.data.type !== 'string') {
+        if (!e || !e.data || typeof e.data.type !== "string") {
           console.warn("[Terminal] Received invalid message from AI worker");
           return;
         }
 
         const { type, payload } = e.data;
         switch (type) {
-          case 'suggestion':
-            inlineAIMode.value = 'suggestion';
+          case "suggestion":
+            inlineAIMode.value = "suggestion";
             aiStore.setInlineSuggestion(payload);
             break;
-          case 'server-url':
+          case "server-url":
             aiStore.setLivePreviewUrl(payload);
             break;
-          case 'error':
+          case "error":
             console.error("[Terminal] AI Worker reported error:", payload);
             break;
           default:
-             // Ignore unknown types
+          // Ignore unknown types
         }
       };
     } catch (err) {

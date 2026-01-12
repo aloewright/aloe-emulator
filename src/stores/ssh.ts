@@ -471,8 +471,6 @@ export const useSSHStore = defineStore("ssh", () => {
     configHostsLoaded.value = false;
   };
 
-
-
   /**
    * Load SSH config hosts from ~/.ssh/config with error handling
    * Uses cache to avoid re-parsing on every call
