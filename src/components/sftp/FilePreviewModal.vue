@@ -631,8 +631,20 @@ function endPan() {
   document.removeEventListener("mouseup", endPan);
 }
 
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function renderMarkdown(md: string): string {
-  let html = md
+  // Prevent XSS by escaping HTML first
+  let html = escapeHtml(md);
+
+  html = html
     .replaceAll(/^### (.*$)/gim, "<h3>$1</h3>")
     .replaceAll(/^## (.*$)/gim, "<h2>$1</h2>")
     .replaceAll(/^# (.*$)/gim, "<h1>$1</h1>")
@@ -644,7 +656,18 @@ function renderMarkdown(md: string): string {
     .replaceAll(/`(.*?)`/gim, "<code>$1</code>")
     .replaceAll(
       /\[([^\]]{1,1000})\]\(([^)]{1,1000})\)/gim,
-      '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">$1</a>',
+      (match, text, url) => {
+        const safeUrl = url.trim();
+        // Allow http, https, mailto, ftp, sftp, and anchors/relative paths
+        if (
+          /^(?:https?|sftp|mailto|ftp):\/\//i.test(safeUrl) ||
+          safeUrl.startsWith("/") ||
+          safeUrl.startsWith("#")
+        ) {
+          return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">${text}</a>`;
+        }
+        return text;
+      },
     )
     .replaceAll(/\n\n/gim, "</p><p>")
     .replaceAll(/\n/gim, "<br>");
