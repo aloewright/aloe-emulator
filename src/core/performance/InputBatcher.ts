@@ -34,9 +34,11 @@ export class InputBatcher {
     const currentData = this.pendingData.get(terminalId) || "";
     this.pendingData.set(terminalId, currentData + data);
 
-    const existingTimeout = this.timeouts.get(terminalId);
-    if (existingTimeout) {
-      clearTimeout(existingTimeout);
+    // OPTIMIZATION: Throttling instead of Debouncing
+    // If a timeout is already scheduled, we do NOT clear it.
+    // This ensures data is sent at least every BATCH_DELAY ms during continuous input.
+    if (this.timeouts.has(terminalId)) {
+      return;
     }
 
     const timeout = globalThis.setTimeout(() => {
