@@ -18,6 +18,8 @@
       <textarea
         :id="inputId"
         ref="inputRef"
+        :aria-invalid="!!errorMessage"
+        :aria-describedby="ariaDescribedBy"
         v-model="inputValue"
         :rows="rows"
         :placeholder="placeholder"
@@ -41,12 +43,20 @@
 
     <div v-if="helper" class="min-h-5">
       <!-- Helper text (only show if no error) -->
-      <p v-if="helperText && !errorMessage" class="text-xs text-gray-400">
+      <p
+        v-if="helperText && !errorMessage"
+        :id="helperId"
+        class="text-xs text-gray-400"
+      >
         {{ helperText }}
       </p>
 
       <!-- Error message -->
-      <p v-if="errorMessage" class="text-xs text-red-400 flex items-center">
+      <p
+        v-if="errorMessage"
+        :id="errorId"
+        class="text-xs text-red-400 flex items-center"
+      >
         <TriangleAlert class="mr-1" :size="12" />
         {{ errorMessage }}
       </p>
@@ -101,6 +111,15 @@ const { sizeClasses, stateClasses } = useFormStyles(props);
 
 // Component-specific state
 const inputRef = ref<HTMLInputElement>();
+
+const errorId = computed(() => `${inputId.value}-error`);
+const helperId = computed(() => `${inputId.value}-helper`);
+
+const ariaDescribedBy = computed(() => {
+  if (errorMessage.value) return errorId.value;
+  if (props.helperText) return helperId.value;
+  return undefined;
+});
 
 const inputValue = computed({
   get: () => props.modelValue?.toString() ?? "",
