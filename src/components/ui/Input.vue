@@ -62,7 +62,8 @@
           type="button"
           variant="ghost"
           class="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer"
-          tabindex="-1"
+          :aria-label="isPasswordVisible ? 'Hide password' : 'Show password'"
+          :title="isPasswordVisible ? 'Hide password' : 'Show password'"
           @click="togglePasswordVisibility"
         >
           <component :is="isPasswordVisible ? EyeOff : Eye" :size="iconSize" />
@@ -73,8 +74,9 @@
           v-else-if="rightIcon"
           type="button"
           variant="ghost"
-          tabindex="-1"
           class="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer"
+          :aria-label="rightIconLabel || 'Icon action'"
+          :title="rightIconLabel"
           @click="emit('right-icon-click')"
         >
           <component :is="rightIcon" :size="iconSize" />
@@ -116,6 +118,7 @@ interface InputProps {
   size?: "sm" | "md" | "lg";
   leftIcon?: Component;
   rightIcon?: Component;
+  rightIconLabel?: string;
   disabled?: boolean;
   readonly?: boolean;
   autocomplete?: string;
