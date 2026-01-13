@@ -257,7 +257,17 @@ const writeOutput = (data: string): void => {
 
       // Offload analysis to Web Worker
       if (aiStore.inlineEnabled && aiWorker) {
-        debouncedAnalyze(data);
+        // Optimization: Buffer data before sending to worker
+        // This prevents data loss (debounce previously dropped intermediate chunks)
+        // and improves performance by batching messages
+        aiBuffer += data;
+
+        // If buffer gets too large (50KB), force flush to prevent memory issues during heavy output
+        if (aiBuffer.length > 50000) {
+          flushAiBuffer();
+        } else {
+          debouncedAnalyze();
+        }
       }
     } catch (error) {
       console.error(`Error in writeOutput for ${props.terminalId}:`, error);
@@ -267,15 +277,25 @@ const writeOutput = (data: string): void => {
 
 // Web Worker for AI analysis
 let aiWorker: Worker | null = null;
+let aiBuffer = "";
 
-const debouncedAnalyze = debounce((data: string) => {
-  if (aiWorker) {
+const flushAiBuffer = () => {
+  if (aiWorker && aiBuffer.length > 0) {
     try {
+      // Capture and clear buffer atomically-ish
+      const data = aiBuffer;
+      aiBuffer = "";
       aiWorker.postMessage({ type: 'analyze', data });
     } catch (err) {
       console.error("[Terminal] Failed to post message to AI Worker:", err);
     }
   }
+  // Reset debounce timer since we just flushed
+  debouncedAnalyze.cancel();
+};
+
+const debouncedAnalyze = debounce(() => {
+  flushAiBuffer();
 }, 300); // 300ms debounce
 
 
