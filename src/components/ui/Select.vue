@@ -117,6 +117,7 @@ interface SelectProps {
   size?: "sm" | "md" | "lg";
   leftIcon?: Component;
   rightIcon?: Component;
+  rightIconLabel?: string;
   disabled?: boolean;
   readonly?: boolean;
   autocomplete?: string;
