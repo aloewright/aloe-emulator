@@ -83,158 +83,163 @@
             </div>
 
             <div class="flex items-start gap-3">
-            <!-- Transfer icon and direction -->
-            <div
-              class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
-              :class="getDirectionClass(transfer.direction)"
-            >
-              <component
-                :is="transfer.direction === 'upload' ? ArrowUpCircle : ArrowDownCircle"
-                :size="16"
-              />
-            </div>
+              <!-- Transfer icon and direction -->
+              <div
+                class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
+                :class="getDirectionClass(transfer.direction)"
+              >
+                <component
+                  :is="
+                    transfer.direction === 'upload'
+                      ? ArrowUpCircle
+                      : ArrowDownCircle
+                  "
+                  :size="16"
+                />
+              </div>
 
-            <div class="flex-1 min-w-0">
-              <!-- Transfer header with priority and status -->
-              <div class="flex items-start justify-between mb-1.5">
-                <div class="flex-1 min-w-0 mr-2">
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="text-sm font-medium text-gray-200 truncate">
-                      {{ getFileName(transfer) }}
-                    </span>
-                    <!-- Priority badge -->
-                    <span
-                      v-if="transfer.priority > 0"
-                      class="px-1.5 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-400"
-                      :title="`Priority: ${transfer.priority}`"
-                    >
-                      P{{ transfer.priority }}
-                    </span>
-                    <!-- Retry count indicator -->
-                    <span
-                      v-if="transfer.retryCount > 0"
-                      class="px-1.5 py-0.5 rounded text-xs font-medium bg-orange-500/20 text-orange-400"
-                      :title="`Retry ${transfer.retryCount}/${transfer.maxRetries}`"
-                    >
-                      Retry {{ transfer.retryCount }}
-                    </span>
+              <div class="flex-1 min-w-0">
+                <!-- Transfer header with priority and status -->
+                <div class="flex items-start justify-between mb-1.5">
+                  <div class="flex-1 min-w-0 mr-2">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="text-sm font-medium text-gray-200 truncate">
+                        {{ getFileName(transfer) }}
+                      </span>
+                      <!-- Priority badge -->
+                      <span
+                        v-if="transfer.priority > 0"
+                        class="px-1.5 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-400"
+                        :title="`Priority: ${transfer.priority}`"
+                      >
+                        P{{ transfer.priority }}
+                      </span>
+                      <!-- Retry count indicator -->
+                      <span
+                        v-if="transfer.retryCount > 0"
+                        class="px-1.5 py-0.5 rounded text-xs font-medium bg-orange-500/20 text-orange-400"
+                        :title="`Retry ${transfer.retryCount}/${transfer.maxRetries}`"
+                      >
+                        Retry {{ transfer.retryCount }}
+                      </span>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      {{ formatBytes(transfer.transferredBytes) }} /
+                      {{ formatBytes(transfer.totalBytes) }}
+                      <span v-if="transfer.speedBytesPerSec" class="ml-2">
+                        • {{ formatSpeed(transfer.speedBytesPerSec) }}
+                      </span>
+                      <span v-if="transfer.etaSeconds" class="ml-2">
+                        • ETA: {{ formatETA(transfer.etaSeconds) }}
+                      </span>
+                    </div>
                   </div>
-                  <div class="text-xs text-gray-500">
-                    {{ formatBytes(transfer.transferredBytes) }} /
-                    {{ formatBytes(transfer.totalBytes) }}
-                    <span v-if="transfer.speedBytesPerSec" class="ml-2">
-                      • {{ formatSpeed(transfer.speedBytesPerSec) }}
-                    </span>
-                    <span v-if="transfer.etaSeconds" class="ml-2">
-                      • ETA: {{ formatETA(transfer.etaSeconds) }}
-                    </span>
+
+                  <!-- Status badge -->
+                  <div
+                    class="px-2 py-1 rounded text-xs font-medium whitespace-nowrap flex-shrink-0"
+                    :class="getStatusClass(transfer.status)"
+                  >
+                    {{ getStatusLabel(transfer.status) }}
                   </div>
                 </div>
 
-                <!-- Status badge -->
+                <!-- Progress bar -->
+                <div class="w-full bg-gray-800 rounded-full h-1.5 mb-2">
+                  <div
+                    class="h-1.5 rounded-full transition-all duration-300"
+                    :class="getProgressBarClass(transfer.status)"
+                    :style="{
+                      width: `${(transfer.transferredBytes / transfer.totalBytes) * 100}%`,
+                    }"
+                  ></div>
+                </div>
+
+                <!-- Actions row -->
+                <div class="flex items-center justify-between">
+                  <!-- Priority selector for queued/paused transfers -->
+                  <div class="flex items-center gap-2">
+                    <Select
+                      v-if="canChangePriority(transfer)"
+                      :id="`transfer-priority-${transfer.transferId}`"
+                      :model-value="transfer.priority"
+                      :options="priorityOptions"
+                      size="sm"
+                      class="w-24"
+                      @update:model-value="
+                        (value) =>
+                          handlePriorityChange(transfer.transferId, value)
+                      "
+                    />
+                    <span v-else class="text-xs text-gray-600">
+                      {{ transfer.direction === "upload" ? "↑" : "↓" }}
+                      {{ transfer.direction }}
+                    </span>
+                  </div>
+
+                  <!-- Action buttons -->
+                  <div class="flex items-center gap-1.5">
+                    <!-- Pause button -->
+                    <Button
+                      v-if="transfer.status === 'inprogress'"
+                      variant="ghost"
+                      size="sm"
+                      :icon="Pause"
+                      @click="handlePause(transfer.transferId)"
+                      title="Pause transfer"
+                    />
+                    <!-- Resume button -->
+                    <Button
+                      v-if="transfer.status === 'paused'"
+                      variant="ghost"
+                      size="sm"
+                      :icon="Play"
+                      @click="handleResume(transfer.transferId)"
+                      title="Resume transfer"
+                    />
+                    <!-- Retry button -->
+                    <Button
+                      v-if="
+                        transfer.status === 'failed' &&
+                        transfer.retryCount < transfer.maxRetries
+                      "
+                      variant="ghost"
+                      size="sm"
+                      :icon="RotateCw"
+                      @click="handleRetry(transfer.transferId)"
+                      title="Retry transfer"
+                    />
+                    <!-- Cancel button -->
+                    <Button
+                      v-if="canCancel(transfer)"
+                      variant="ghost"
+                      size="sm"
+                      :icon="X"
+                      @click="handleCancel(transfer.transferId)"
+                      title="Cancel transfer"
+                    />
+                  </div>
+                </div>
+
+                <!-- Error message -->
                 <div
-                  class="px-2 py-1 rounded text-xs font-medium whitespace-nowrap flex-shrink-0"
-                  :class="getStatusClass(transfer.status)"
+                  v-if="transfer.error"
+                  class="mt-2 p-2 rounded bg-red-500/10 border border-red-500/20"
                 >
-                  {{ getStatusLabel(transfer.status) }}
+                  <p class="text-xs text-red-400">
+                    <AlertCircle :size="12" class="inline mr-1" />
+                    {{ transfer.error }}
+                  </p>
                 </div>
-              </div>
 
-              <!-- Progress bar -->
-              <div class="w-full bg-gray-800 rounded-full h-1.5 mb-2">
+                <!-- Next retry time -->
                 <div
-                  class="h-1.5 rounded-full transition-all duration-300"
-                  :class="getProgressBarClass(transfer.status)"
-                  :style="{
-                    width: `${(transfer.transferredBytes / transfer.totalBytes) * 100}%`,
-                  }"
-                ></div>
-              </div>
-
-              <!-- Actions row -->
-              <div class="flex items-center justify-between">
-                <!-- Priority selector for queued/paused transfers -->
-                <div class="flex items-center gap-2">
-                  <Select
-                    v-if="canChangePriority(transfer)"
-                    :id="`transfer-priority-${transfer.transferId}`"
-                    :model-value="transfer.priority"
-                    :options="priorityOptions"
-                    size="sm"
-                    class="w-24"
-                    @update:model-value="
-                      (value) => handlePriorityChange(transfer.transferId, value)
-                    "
-                  />
-                  <span v-else class="text-xs text-gray-600">
-                    {{ transfer.direction === "upload" ? "↑" : "↓" }}
-                    {{ transfer.direction }}
-                  </span>
-                </div>
-
-                <!-- Action buttons -->
-                <div class="flex items-center gap-1.5">
-                  <!-- Pause button -->
-                  <Button
-                    v-if="transfer.status === 'inprogress'"
-                    variant="ghost"
-                    size="sm"
-                    :icon="Pause"
-                    @click="handlePause(transfer.transferId)"
-                    title="Pause transfer"
-                  />
-                  <!-- Resume button -->
-                  <Button
-                    v-if="transfer.status === 'paused'"
-                    variant="ghost"
-                    size="sm"
-                    :icon="Play"
-                    @click="handleResume(transfer.transferId)"
-                    title="Resume transfer"
-                  />
-                  <!-- Retry button -->
-                  <Button
-                    v-if="
-                      transfer.status === 'failed' &&
-                      transfer.retryCount < transfer.maxRetries
-                    "
-                    variant="ghost"
-                    size="sm"
-                    :icon="RotateCw"
-                    @click="handleRetry(transfer.transferId)"
-                    title="Retry transfer"
-                  />
-                  <!-- Cancel button -->
-                  <Button
-                    v-if="canCancel(transfer)"
-                    variant="ghost"
-                    size="sm"
-                    :icon="X"
-                    @click="handleCancel(transfer.transferId)"
-                    title="Cancel transfer"
-                  />
+                  v-if="transfer.status === 'failed' && transfer.nextRetryAt"
+                  class="mt-2 text-xs text-gray-500"
+                >
+                  Next retry: {{ formatRetryTime(transfer.nextRetryAt) }}
                 </div>
               </div>
-
-              <!-- Error message -->
-              <div
-                v-if="transfer.error"
-                class="mt-2 p-2 rounded bg-red-500/10 border border-red-500/20"
-              >
-                <p class="text-xs text-red-400">
-                  <AlertCircle :size="12" class="inline mr-1" />
-                  {{ transfer.error }}
-                </p>
-              </div>
-
-              <!-- Next retry time -->
-              <div
-                v-if="transfer.status === 'failed' && transfer.nextRetryAt"
-                class="mt-2 text-xs text-gray-500"
-              >
-                Next retry: {{ formatRetryTime(transfer.nextRetryAt) }}
-              </div>
-            </div>
             </div>
           </div>
         </Card>
@@ -297,19 +302,19 @@ const filteredTransfers = computed(() => {
     return transfers.filter((t) => t.status !== "cancelled");
   }
   return transfers.filter(
-    (t) => t.status === statusFilter.value && t.status !== "cancelled"
+    (t) => t.status === statusFilter.value && t.status !== "cancelled",
   );
 });
 
 const hasCompletedTransfers = computed(() => {
   return Array.from(sftpStore.browserState.activeTransfers.values()).some(
-    (t) => t.status === "completed"
+    (t) => t.status === "completed",
   );
 });
 
 const canRetryAll = computed(() => {
   return Array.from(sftpStore.browserState.activeTransfers.values()).some(
-    (t) => t.status === "failed" && t.retryCount < t.maxRetries
+    (t) => t.status === "failed" && t.retryCount < t.maxRetries,
   );
 });
 
@@ -424,21 +429,27 @@ function canDragTransfer(transfer: TransferProgress): boolean {
   return transfer.status === "queued" || transfer.status === "paused";
 }
 
-function getTransferCardClass(transfer: TransferProgress, index: number): string {
+function getTransferCardClass(
+  transfer: TransferProgress,
+  index: number,
+): string {
   const classes = ["group relative transition-all duration-200"];
-  
+
   if (canDragTransfer(transfer)) {
     classes.push("cursor-move");
   }
-  
+
   if (draggingId.value === transfer.transferId) {
     classes.push("opacity-50");
   }
-  
-  if (dragOverIndex.value === index && draggingId.value !== transfer.transferId) {
+
+  if (
+    dragOverIndex.value === index &&
+    draggingId.value !== transfer.transferId
+  ) {
     classes.push("border-blue-500 bg-blue-500/5");
   }
-  
+
   return classes.join(" ");
 }
 
@@ -482,7 +493,9 @@ async function handleCancel(transferId: string) {
 async function handlePriorityChange(transferId: string, priority: number) {
   try {
     await sftpStore.setTransferPriority(transferId, priority);
-    message.success(`Priority updated to ${priorityOptions.find((o) => o.value === priority)?.label || priority}`);
+    message.success(
+      `Priority updated to ${priorityOptions.find((o) => o.value === priority)?.label || priority}`,
+    );
   } catch (error) {
     console.error("Failed to update priority:", error);
   }
@@ -490,7 +503,7 @@ async function handlePriorityChange(transferId: string, priority: number) {
 
 async function handleRetryAll() {
   const failedTransfers = Array.from(
-    sftpStore.browserState.activeTransfers.values()
+    sftpStore.browserState.activeTransfers.values(),
   ).filter((t) => t.status === "failed" && t.retryCount < t.maxRetries);
 
   for (const transfer of failedTransfers) {
@@ -505,7 +518,7 @@ async function handleRetryAll() {
 
 async function handleClearCompleted() {
   const completedIds = Array.from(
-    sftpStore.browserState.activeTransfers.entries()
+    sftpStore.browserState.activeTransfers.entries(),
   )
     .filter(([_, transfer]) => transfer.status === "completed")
     .map(([id]) => id);
@@ -551,10 +564,10 @@ async function handleDrop(event: DragEvent) {
     try {
       // Get current order of draggable transfers (queued/paused only)
       const draggableTransfers = filteredTransfers.value.filter((t) =>
-        canDragTransfer(t)
+        canDragTransfer(t),
       );
       const draggedIndex = draggableTransfers.findIndex(
-        (t) => t.transferId === draggedId
+        (t) => t.transferId === draggedId,
       );
 
       if (draggedIndex === -1) return;
