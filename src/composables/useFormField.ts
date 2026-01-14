@@ -24,6 +24,8 @@ export interface UseFormFieldReturn {
   errorMessage: Ref<string>;
   touched: Ref<boolean>;
   inputId: ComputedRef<string>;
+  errorId: ComputedRef<string>;
+  helperId: ComputedRef<string>;
   validate: () => string;
   handleBlur: (event: FocusEvent) => void;
   handleFocus: (event: FocusEvent) => void;
@@ -67,6 +69,9 @@ export function useFormField(
       props.id ||
       `input-${crypto.getRandomValues(new Uint32Array(1))[0].toString(36)}`,
   );
+
+  const errorId = computed(() => `${inputId.value}-error`);
+  const helperId = computed(() => `${inputId.value}-helper`);
 
   /**
    * Validate field value against rules
@@ -129,6 +134,8 @@ export function useFormField(
     errorMessage,
     touched,
     inputId,
+    errorId,
+    helperId,
     validate,
     handleBlur,
     handleFocus,
