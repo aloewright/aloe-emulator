@@ -35,6 +35,8 @@
         :readonly="readonly"
         :autocomplete="autocomplete"
         :autofocus="autofocus"
+        :aria-invalid="!!errorMessage"
+        :aria-describedby="errorMessage ? errorId : helperText ? helperId : undefined"
         :class="[
           'block w-full rounded-lg border transition-all duration-200 touch-manipulation',
           'focus:outline-none',
@@ -84,12 +86,20 @@
 
     <div v-if="helper" :class="space && 'min-h-5'">
       <!-- Helper text (only show if no error) -->
-      <p v-if="helperText && !errorMessage" class="text-xs text-gray-400">
+      <p
+        v-if="helperText && !errorMessage"
+        :id="helperId"
+        class="text-xs text-gray-400"
+      >
         {{ helperText }}
       </p>
 
       <!-- Error message -->
-      <p v-if="errorMessage" class="text-xs text-red-400 flex items-center">
+      <p
+        v-if="errorMessage"
+        :id="errorId"
+        class="text-xs text-red-400 flex items-center"
+      >
         <TriangleAlert class="mr-1" :size="12" />
         {{ errorMessage }}
       </p>
@@ -146,6 +156,8 @@ const {
   errorMessage,
   touched,
   inputId,
+  errorId,
+  helperId,
   validate,
   handleBlur,
   handleFocus,
