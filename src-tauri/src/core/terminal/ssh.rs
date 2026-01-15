@@ -285,15 +285,22 @@ impl SSHTerminal {
         // Inject environment variables via export commands
         if let Some(env) = &self.ssh_profile.env {
             for (key, value) in env {
-                // Escape single quotes in value
-                let escaped_value = value.replace("'", "'\\''");
-                command_parts.push(format!("export {}='{}'", key, escaped_value));
+                if !is_valid_env_key(key) {
+                    eprintln!(
+                        "Warning: Skipping invalid environment variable key: {}",
+                        key
+                    );
+                    continue;
+                }
+                // Use shell_escape for value (it includes the quotes)
+                command_parts.push(format!("export {}={}", key, shell_escape(value)));
             }
         }
 
         if let Some(wd) = &self.ssh_profile.working_dir {
             if !wd.is_empty() {
-                command_parts.push(format!("cd \"{}\"", wd));
+                // Use shell_escape for working directory
+                command_parts.push(format!("cd {}", shell_escape(wd)));
             }
         }
 
@@ -575,5 +582,49 @@ impl SSHTerminal {
         }
 
         Ok(())
+    }
+}
+
+/// Escapes a string for use in a POSIX shell single-quoted string.
+/// Replaces ' with '\'' and wraps the result in single quotes.
+fn shell_escape(s: &str) -> String {
+    format!("'{}'", s.replace("'", "'\\''"))
+}
+
+/// Checks if a string is a valid environment variable key.
+/// Must start with [a-zA-Z_] and contain only [a-zA-Z0-9_].
+fn is_valid_env_key(s: &str) -> bool {
+    if s.is_empty() {
+        return false;
+    }
+    let mut chars = s.chars();
+    if let Some(first) = chars.next() {
+        if !first.is_ascii_alphabetic() && first != '_' {
+            return false;
+        }
+    }
+    chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_shell_escape() {
+        assert_eq!(shell_escape("simple"), "'simple'");
+        assert_eq!(shell_escape("with space"), "'with space'");
+        assert_eq!(shell_escape("with'quote"), "'with'\''quote'");
+        assert_eq!(shell_escape(""), "''");
+    }
+
+    #[test]
+    fn test_is_valid_env_key() {
+        assert!(is_valid_env_key("VALID"));
+        assert!(is_valid_env_key("VALID_123"));
+        assert!(is_valid_env_key("_VALID"));
+        assert!(!is_valid_env_key("INVALID-KEY"));
+        assert!(!is_valid_env_key("1INVALID"));
+        assert!(!is_valid_env_key(""));
     }
 }

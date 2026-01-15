@@ -16,7 +16,7 @@ pub struct LocalSSHKey {
 /// Common SSH key file patterns to look for
 const SSH_KEY_PATTERNS: &[&str] = &[
     "id_rsa",
-    "id_ed25519", 
+    "id_ed25519",
     "id_ecdsa",
     "id_dsa",
     "id_xmss",
@@ -26,7 +26,7 @@ const SSH_KEY_PATTERNS: &[&str] = &[
 /// Scan the local ~/.ssh directory for SSH keys
 pub fn scan_local_ssh_keys() -> Result<Vec<LocalSSHKey>, String> {
     let ssh_dir = get_ssh_directory()?;
-    
+
     if !ssh_dir.exists() {
         return Ok(Vec::new());
     }
@@ -34,12 +34,12 @@ pub fn scan_local_ssh_keys() -> Result<Vec<LocalSSHKey>, String> {
     let mut keys = Vec::new();
 
     // Read directory entries
-    let entries = fs::read_dir(&ssh_dir)
-        .map_err(|e| format!("Failed to read SSH directory: {}", e))?;
+    let entries =
+        fs::read_dir(&ssh_dir).map_err(|e| format!("Failed to read SSH directory: {}", e))?;
 
     for entry in entries.flatten() {
         let path = entry.path();
-        
+
         // Skip directories and public key files
         if path.is_dir() || path.extension().map_or(false, |ext| ext == "pub") {
             continue;
@@ -65,21 +65,20 @@ pub fn scan_local_ssh_keys() -> Result<Vec<LocalSSHKey>, String> {
 
 /// Get the SSH directory path
 fn get_ssh_directory() -> Result<PathBuf, String> {
-    let home = std::env::var("HOME")
-        .map_err(|_| "Cannot determine HOME directory".to_string())?;
+    let home = std::env::var("HOME").map_err(|_| "Cannot determine HOME directory".to_string())?;
     Ok(PathBuf::from(home).join(".ssh"))
 }
 
 /// Try to parse an SSH key file and extract metadata
 fn try_parse_ssh_key(path: &PathBuf) -> Option<LocalSSHKey> {
     let file_name = path.file_name()?.to_str()?;
-    
+
     // Check if it matches known patterns or read content to verify
     let _is_known_pattern = SSH_KEY_PATTERNS.iter().any(|p| file_name.starts_with(p));
-    
+
     // Read file content to verify it's a key
     let content = fs::read_to_string(path).ok()?;
-    
+
     // Check for private key markers
     if !content.contains("PRIVATE KEY") && !content.contains("OPENSSH PRIVATE KEY") {
         return None;
@@ -87,7 +86,7 @@ fn try_parse_ssh_key(path: &PathBuf) -> Option<LocalSSHKey> {
 
     let key_type = detect_key_type(&content);
     let has_passphrase = detect_passphrase(&content);
-    
+
     // Check for corresponding public key
     let pub_key_path = path.with_extension("pub");
     let public_key_path = if pub_key_path.exists() {
@@ -97,9 +96,9 @@ fn try_parse_ssh_key(path: &PathBuf) -> Option<LocalSSHKey> {
     };
 
     // Try to get fingerprint from public key
-    let fingerprint = public_key_path.as_ref().and_then(|_| {
-        get_key_fingerprint(path).ok()
-    });
+    let fingerprint = public_key_path
+        .as_ref()
+        .and_then(|_| get_key_fingerprint(path).ok());
 
     Some(LocalSSHKey {
         name: file_name.to_string(),
@@ -143,7 +142,7 @@ fn detect_passphrase(content: &str) -> bool {
     if content.contains("ENCRYPTED") || content.contains("Proc-Type: 4,ENCRYPTED") {
         return true;
     }
-    
+
     // Modern OpenSSH format - check for bcrypt encryption marker
     // This is a heuristic; true detection would require parsing the key format
     if content.contains("BEGIN OPENSSH PRIVATE KEY") {
@@ -152,14 +151,14 @@ fn detect_passphrase(content: &str) -> bool {
         // unless we see encryption indicators
         return content.contains("aes") || content.contains("bcrypt");
     }
-    
+
     false
 }
 
 /// Try to get the key fingerprint using ssh-keygen
 fn get_key_fingerprint(key_path: &PathBuf) -> Result<String, String> {
     use std::process::Command;
-    
+
     let output = Command::new("ssh-keygen")
         .args(["-lf", &key_path.to_string_lossy()])
         .output()
@@ -175,14 +174,14 @@ fn get_key_fingerprint(key_path: &PathBuf) -> Result<String, String> {
             }
         }
     }
-    
+
     Err("Could not extract fingerprint".to_string())
 }
 
 /// Parse SSH config file for IdentityFile entries
 fn parse_ssh_config_keys(ssh_dir: &PathBuf) -> Result<Vec<LocalSSHKey>, String> {
     let config_path = ssh_dir.join("config");
-    
+
     if !config_path.exists() {
         return Ok(Vec::new());
     }
@@ -191,7 +190,7 @@ fn parse_ssh_config_keys(ssh_dir: &PathBuf) -> Result<Vec<LocalSSHKey>, String> 
         .map_err(|e| format!("Failed to read SSH config: {}", e))?;
 
     let mut keys = Vec::new();
-    
+
     for line in content.lines() {
         let line = line.trim();
         if line.to_lowercase().starts_with("identityfile") {
@@ -199,7 +198,7 @@ fn parse_ssh_config_keys(ssh_dir: &PathBuf) -> Result<Vec<LocalSSHKey>, String> 
             let parts: Vec<&str> = line.splitn(2, char::is_whitespace).collect();
             if parts.len() == 2 {
                 let key_path = parts[1].trim();
-                
+
                 // Expand ~ to home directory
                 let expanded_path = if key_path.starts_with("~/") {
                     let home = std::env::var("HOME").unwrap_or_default();
@@ -207,7 +206,7 @@ fn parse_ssh_config_keys(ssh_dir: &PathBuf) -> Result<Vec<LocalSSHKey>, String> 
                 } else {
                     key_path.to_string()
                 };
-                
+
                 let path = PathBuf::from(&expanded_path);
                 if path.exists() {
                     if let Some(key) = try_parse_ssh_key(&path) {
@@ -229,6 +228,9 @@ mod tests {
     fn test_detect_key_type() {
         assert_eq!(detect_key_type("-----BEGIN RSA PRIVATE KEY-----"), "RSA");
         assert_eq!(detect_key_type("-----BEGIN EC PRIVATE KEY-----"), "ECDSA");
-        assert_eq!(detect_key_type("-----BEGIN OPENSSH PRIVATE KEY-----\nssh-ed25519"), "Ed25519");
+        assert_eq!(
+            detect_key_type("-----BEGIN OPENSSH PRIVATE KEY-----\nssh-ed25519"),
+            "Ed25519"
+        );
     }
 }
