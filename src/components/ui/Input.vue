@@ -35,6 +35,8 @@
         :readonly="readonly"
         :autocomplete="autocomplete"
         :autofocus="autofocus"
+        :aria-invalid="!!errorMessage"
+        :aria-describedby="ariaDescribedBy"
         :class="[
           'block w-full rounded-lg border transition-all duration-200 touch-manipulation',
           'focus:outline-none',
@@ -62,7 +64,7 @@
           type="button"
           variant="ghost"
           class="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer"
-          tabindex="-1"
+          :aria-label="isPasswordVisible ? 'Hide password' : 'Show password'"
           @click="togglePasswordVisibility"
         >
           <component :is="isPasswordVisible ? EyeOff : Eye" :size="iconSize" />
@@ -73,8 +75,8 @@
           v-else-if="rightIcon"
           type="button"
           variant="ghost"
-          tabindex="-1"
           class="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer"
+          :aria-label="rightIconLabel"
           @click="emit('right-icon-click')"
         >
           <component :is="rightIcon" :size="iconSize" />
@@ -84,12 +86,20 @@
 
     <div v-if="helper" :class="space && 'min-h-5'">
       <!-- Helper text (only show if no error) -->
-      <p v-if="helperText && !errorMessage" class="text-xs text-gray-400">
+      <p
+        v-if="helperText && !errorMessage"
+        :id="helperId"
+        class="text-xs text-gray-400"
+      >
         {{ helperText }}
       </p>
 
       <!-- Error message -->
-      <p v-if="errorMessage" class="text-xs text-red-400 flex items-center">
+      <p
+        v-if="errorMessage"
+        :id="errorId"
+        class="text-xs text-red-400 flex items-center"
+      >
         <TriangleAlert class="mr-1" :size="12" />
         {{ errorMessage }}
       </p>
@@ -116,6 +126,7 @@ interface InputProps {
   size?: "sm" | "md" | "lg";
   leftIcon?: Component;
   rightIcon?: Component;
+  rightIconLabel?: string;
   disabled?: boolean;
   readonly?: boolean;
   autocomplete?: string;
@@ -171,6 +182,15 @@ const inputType = computed(() => {
 });
 
 const showPasswordToggle = computed(() => props.type === "password");
+
+const helperId = computed(() => `${inputId.value}-helper`);
+const errorId = computed(() => `${inputId.value}-error`);
+
+const ariaDescribedBy = computed(() => {
+  if (errorMessage.value) return errorId.value;
+  if (props.helperText) return helperId.value;
+  return undefined;
+});
 
 const togglePasswordVisibility = (): void => {
   isPasswordVisible.value = !isPasswordVisible.value;
