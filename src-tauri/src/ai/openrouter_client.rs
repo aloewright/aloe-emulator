@@ -88,8 +88,8 @@ impl OpenRouterClient {
             messages,
         };
 
-        let req_json = serde_json::to_string(&req)?;
-        println!("[OpenRouter] Sending request: {}", req_json);
+        let _req_json = serde_json::to_string(&req)?;
+        println!("[OpenRouter] Sending request to {}", url);
 
         let resp = self
             .client

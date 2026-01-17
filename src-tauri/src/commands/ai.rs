@@ -37,18 +37,16 @@ pub async fn generate_command(
         "[AI] Generating command with provider: '{}', model: '{}'",
         provider, model
     );
-    println!("[AI] User Prompt: '{}'", prompt);
 
     let context = ContextBuilder::build();
     let system_prompt = ContextBuilder::construct_system_prompt(&context);
-    println!("[AI] System Prompt: '{}'", system_prompt);
 
     match provider.as_str() {
         "ollama" => {
             let client = OllamaClient::new(None);
             match client.generate(&model, &prompt, Some(&system_prompt)).await {
                 Ok(response) => {
-                    println!("[AI] Response received: '{}'", response);
+                    println!("[AI] Response received (length: {})", response.len());
                     Ok(response)
                 }
                 Err(e) => {
@@ -62,7 +60,7 @@ pub async fn generate_command(
                 let client = OpenRouterClient::new(key);
                 match client.generate(&model, &prompt, Some(&system_prompt)).await {
                     Ok(response) => {
-                        println!("[AI] Response received: '{}'", response);
+                        println!("[AI] Response received (length: {})", response.len());
                         Ok(response)
                     }
                     Err(e) => {
