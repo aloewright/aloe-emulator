@@ -10,6 +10,7 @@
       attrs.class,
     ]"
     :title="title"
+    :aria-label="title || text || undefined"
     :disabled="disabled || loading"
     @click="handleClick"
   >
