@@ -134,11 +134,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import {
-  Download,
-  RefreshCw,
-  ExternalLink,
-} from "lucide-vue-next";
+import { Download, RefreshCw, ExternalLink } from "lucide-vue-next";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import Modal from "../ui/Modal.vue";
 import Button from "../ui/Button.vue";

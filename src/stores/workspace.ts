@@ -986,10 +986,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     if (success) {
       if (direction === "top" || direction === "left") {
         const swapChildrenInLayout = (layout: PanelLayout): boolean => {
-          if (
-            layout.type === "split" &&
-            layout.children?.length === 2
-          ) {
+          if (layout.type === "split" && layout.children?.length === 2) {
             const hasNewPanel = layout.children.some(
               (child) =>
                 child.type === "panel" && child.panel?.id === newPanelId,
@@ -1087,10 +1084,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     if (success) {
       if (direction === "top" || direction === "left") {
         const swapChildrenInLayout = (layout: PanelLayout): boolean => {
-          if (
-            layout.type === "split" &&
-            layout.children?.length === 2
-          ) {
+          if (layout.type === "split" && layout.children?.length === 2) {
             const hasNewPanel = layout.children.some(
               (child) =>
                 child.type === "panel" && child.panel?.id === newPanelId,
@@ -1233,11 +1227,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
         },
       });
     } else {
-      return createLocalTerminal(
-        terminal.shell,
-        terminal.workingDir,
-        title,
-      );
+      return createLocalTerminal(terminal.shell, terminal.workingDir, title);
     }
   };
 
@@ -1307,7 +1297,6 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     triggerTerminalResize();
   };
 
-
   /*
    * Helper to find tab for title change
    */
@@ -1363,10 +1352,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
   };
 
   const handleTerminalExit = (exitEvent: TerminalExited) => {
-    const result = findTabForExit(
-      panelLayout.value,
-      exitEvent.terminalId,
-    );
+    const result = findTabForExit(panelLayout.value, exitEvent.terminalId);
 
     if (result) {
       const terminal = terminals.value.find(
@@ -1392,10 +1378,6 @@ export const useWorkspaceStore = defineStore("workspace", () => {
       }
     }
   };
-
-
-
-
 
   const handleTerminalLatency = (latencyEvent: TerminalLatency) => {
     const terminal = terminals.value.find(
@@ -1436,9 +1418,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
         handleTerminalTitleChange,
       );
 
-      unlistenTerminalExits = await listenToTerminalExit(
-        handleTerminalExit,
-      );
+      unlistenTerminalExits = await listenToTerminalExit(handleTerminalExit);
 
       unlistenTerminalLatency = await listenToTerminalLatency(
         handleTerminalLatency,
