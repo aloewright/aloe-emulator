@@ -8,6 +8,7 @@ use crate::models::terminal::{
 use crate::services::buffer_manager::TerminalBufferManager;
 use crate::services::recording::SessionRecorder;
 use crate::services::ssh::SSHKeyService;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter};
@@ -202,9 +203,11 @@ impl TerminalManager {
                 }
 
                 // Process buffer saving with smart filtering
-                if let Ok(data_str) = String::from_utf8(data.clone()) {
+                // OPTIMIZATION: Use std::str::from_utf8(&data) instead of String::from_utf8(data.clone())
+                // This avoids allocating a new String and cloning the Vec<u8> for every chunk of output.
+                if let Ok(data_str) = std::str::from_utf8(&data) {
                     let mut filter = alt_screen_filter.lock().await;
-                    let filtered_data = filter.process(&data_str);
+                    let filtered_data = filter.process(data_str);
 
                     if !filtered_data.is_empty() {
                         buffer_manager_clone
@@ -406,11 +409,24 @@ impl AltScreenFilter {
         }
     }
 
-    fn process(&mut self, data: &str) -> String {
-        let mut result = String::new();
-        let mut current_pos = 0;
+    fn process<'a>(&mut self, data: &'a str) -> Cow<'a, str> {
         let enter_seq = "\x1b[?1049h";
         let exit_seq = "\x1b[?1049l";
+
+        // OPTIMIZATION: Fast path - if not in alt screen and no enter sequence,
+        // we can return the input string without allocation.
+        if !self.in_alt_screen && !data.contains(enter_seq) {
+            return Cow::Borrowed(data);
+        }
+
+        // OPTIMIZATION: Fast path - if in alt screen and no exit sequence,
+        // we can return empty string without allocation (discard content).
+        if self.in_alt_screen && !data.contains(exit_seq) {
+             return Cow::Borrowed("");
+        }
+
+        let mut result = String::new();
+        let mut current_pos = 0;
 
         while current_pos < data.len() {
             let remaining = &data[current_pos..];
@@ -441,7 +457,7 @@ impl AltScreenFilter {
             }
         }
 
-        result
+        Cow::Owned(result)
     }
 }
 
@@ -452,17 +468,18 @@ mod tests {
     #[test]
     fn test_normal_output() {
         let mut filter = AltScreenFilter::new();
-        assert_eq!(filter.process("hello world\n"), "hello world\n");
+        assert_eq!(filter.process("hello world\n"), Cow::Borrowed("hello world\n"));
     }
 
     #[test]
     fn test_enter_alt_screen() {
         let mut filter = AltScreenFilter::new();
         // "before" saved, sequence triggers state change, "after" dropped
-        assert_eq!(filter.process("before\x1b[?1049h after"), "before");
+        // This will return an Owned string because modification happened
+        assert_eq!(filter.process("before\x1b[?1049h after"), Cow::Owned("before".to_string()));
         assert!(filter.in_alt_screen);
-        // Subsequent output dropped
-        assert_eq!(filter.process("more alt screen content"), "");
+        // Subsequent output dropped - Borrowed empty string
+        assert_eq!(filter.process("more alt screen content"), Cow::Borrowed(""));
     }
 
     #[test]
@@ -470,7 +487,7 @@ mod tests {
         let mut filter = AltScreenFilter::new();
         filter.in_alt_screen = true;
         // "alt content" dropped, sequence triggers state change, "after" saved
-        assert_eq!(filter.process("alt content\x1b[?1049l after"), " after");
+        assert_eq!(filter.process("alt content\x1b[?1049l after"), Cow::Owned(" after".to_string()));
         assert!(!filter.in_alt_screen);
     }
 
@@ -478,7 +495,7 @@ mod tests {
     fn test_toggle_in_single_chunk() {
         let mut filter = AltScreenFilter::new();
         let input = "start \x1b[?1049h inside alt \x1b[?1049l end";
-        assert_eq!(filter.process(input), "start  end");
+        assert_eq!(filter.process(input), Cow::Owned("start  end".to_string()));
         assert!(!filter.in_alt_screen);
     }
 
@@ -486,7 +503,7 @@ mod tests {
     fn test_multiple_toggles() {
         let mut filter = AltScreenFilter::new();
         let input = "1\x1b[?1049h(hide)\x1b[?1049l2\x1b[?1049h(hide again)";
-        assert_eq!(filter.process(input), "12");
+        assert_eq!(filter.process(input), Cow::Owned("12".to_string()));
         assert!(filter.in_alt_screen);
     }
 }
