@@ -89,7 +89,8 @@ impl OpenRouterClient {
         };
 
         let req_json = serde_json::to_string(&req)?;
-        println!("[OpenRouter] Sending request: {}", req_json);
+        // [SECURITY] Removed request logging
+        // println!("[OpenRouter] Sending request: {}", req_json);
 
         let resp = self
             .client
