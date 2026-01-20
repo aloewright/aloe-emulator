@@ -392,8 +392,25 @@ impl MasterPasswordManager {
     }
 
     /// Validate password strength
-    fn validate_password(&self, _password: &str) -> EncryptionResult<()> {
-        // Dev mode: Allow any password
+    fn validate_password(&self, password: &str) -> EncryptionResult<()> {
+        if password.len() < 8 {
+            return Err(EncryptionError::InvalidKey(
+                "Password must be at least 8 characters long".to_string(),
+            ));
+        }
+
+        let has_digit = password.chars().any(|c| c.is_ascii_digit());
+        let has_uppercase = password.chars().any(|c| c.is_ascii_uppercase());
+        let has_lowercase = password.chars().any(|c| c.is_ascii_lowercase());
+
+        // Basic complexity check
+        if !has_digit || !has_uppercase || !has_lowercase {
+            return Err(EncryptionError::InvalidKey(
+                "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+                    .to_string(),
+            ));
+        }
+
         Ok(())
     }
 }
