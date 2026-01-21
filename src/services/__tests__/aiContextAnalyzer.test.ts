@@ -1,8 +1,7 @@
+import { describe, it, expect, beforeEach } from "vitest";
+import { AIContextAnalyzer } from "../aiContextAnalyzer";
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { AIContextAnalyzer } from '../aiContextAnalyzer';
-
-describe('AIContextAnalyzer', () => {
+describe("AIContextAnalyzer", () => {
   let analyzer: AIContextAnalyzer;
 
   beforeEach(() => {
@@ -13,37 +12,40 @@ describe('AIContextAnalyzer', () => {
     analyzer.resetCooldown();
   });
 
-  it('detects simple command not found', () => {
-    const output = 'zsh: command not found: foo';
+  it("detects simple command not found", () => {
+    const output = "zsh: command not found: foo";
     const suggestion = analyzer.analyzeOutput(output);
     expect(suggestion).not.toBeNull();
-    expect(suggestion?.context.type).toBe('error');
-    expect(suggestion?.context.errorType).toContain('Command not found: foo');
+    expect(suggestion?.context.type).toBe("error");
+    expect(suggestion?.context.errorType).toContain("Command not found: foo");
   });
 
-  it('detects command not found with ANSI colors', () => {
+  it("detects command not found with ANSI colors", () => {
     // Simulated output from zsh with syntax highlighting/colors
     // Red color for error
-    const output = '\x1b[31mzsh: command not found: bar\x1b[0m';
+    const output = "\x1b[31mzsh: command not found: bar\x1b[0m";
     const suggestion = analyzer.analyzeOutput(output);
     expect(suggestion).not.toBeNull();
-    expect(suggestion?.context.type).toBe('error');
-    expect(suggestion?.context.errorType).toContain('Command not found: bar');
+    expect(suggestion?.context.type).toBe("error");
+    expect(suggestion?.context.errorType).toContain("Command not found: bar");
   });
 
-  it('detects server start with ANSI colors', () => {
+  it("detects server start with ANSI colors", () => {
     // Simulated output from a node server
-    const output = '\x1b[32m[INFO] Server running at http://localhost:3000\x1b[0m';
+    const output =
+      "\x1b[32m[INFO] Server running at http://localhost:3000\x1b[0m";
     const suggestion = analyzer.analyzeOutput(output);
     expect(suggestion).not.toBeNull();
-    expect(suggestion?.context.type).toBe('server');
-    expect(suggestion?.context.serverUrl).toBe('http://localhost:3000');
+    expect(suggestion?.context.type).toBe("server");
+    expect(suggestion?.context.serverUrl).toBe("http://localhost:3000");
   });
 
-  it('handles accumulated buffer with ANSI', () => {
-    analyzer.analyzeOutput('\x1b[31mzsh: ');
-    const suggestion = analyzer.analyzeOutput('command not found: baz\x1b[0m\r\n');
+  it("handles accumulated buffer with ANSI", () => {
+    analyzer.analyzeOutput("\x1b[31mzsh: ");
+    const suggestion = analyzer.analyzeOutput(
+      "command not found: baz\x1b[0m\r\n",
+    );
     expect(suggestion).not.toBeNull();
-    expect(suggestion?.context.errorType).toContain('Command not found: baz');
+    expect(suggestion?.context.errorType).toContain("Command not found: baz");
   });
 });

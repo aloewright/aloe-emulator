@@ -43,7 +43,10 @@ export const useTerminalProfileStore = defineStore("terminalProfile", () => {
     };
 
     try {
-      const newProfile = await invoke<TerminalProfile>("create_terminal_profile", { request });
+      const newProfile = await invoke<TerminalProfile>(
+        "create_terminal_profile",
+        { request },
+      );
       profiles.value.push(newProfile);
       return newProfile;
     } catch (error) {
@@ -63,7 +66,10 @@ export const useTerminalProfileStore = defineStore("terminalProfile", () => {
     };
 
     try {
-      const updatedProfile = await invoke<TerminalProfile>("update_terminal_profile", { id, request });
+      const updatedProfile = await invoke<TerminalProfile>(
+        "update_terminal_profile",
+        { id, request },
+      );
       const index = profiles.value.findIndex((p) => p.id === id);
       if (index !== -1) {
         profiles.value[index] = updatedProfile;
@@ -113,4 +119,3 @@ export const useTerminalProfileStore = defineStore("terminalProfile", () => {
     loadProfiles,
   };
 });
-
