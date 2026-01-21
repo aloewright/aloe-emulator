@@ -631,8 +631,22 @@ function endPan() {
   document.removeEventListener("mouseup", endPan);
 }
 
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  };
+  return text.replace(/[&<>"']/g, (m) => map[m]);
+}
+
 function renderMarkdown(md: string): string {
-  let html = md
+  // 1. Escape HTML to prevent XSS from raw tags
+  let safeMd = escapeHtml(md);
+
+  let html = safeMd
     .replaceAll(/^### (.*$)/gim, "<h3>$1</h3>")
     .replaceAll(/^## (.*$)/gim, "<h2>$1</h2>")
     .replaceAll(/^# (.*$)/gim, "<h1>$1</h1>")
@@ -642,9 +656,23 @@ function renderMarkdown(md: string): string {
     .replaceAll(/_(.*?)_/gim, "<em>$1</em>")
     .replaceAll(/```([\s\S]*?)```/gim, "<pre><code>$1</code></pre>")
     .replaceAll(/`(.*?)`/gim, "<code>$1</code>")
-    .replaceAll(
+    .replace(
       /\[([^\]]{1,1000})\]\(([^)]{1,1000})\)/gim,
-      '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">$1</a>',
+      (_match, text, url) => {
+        // Sanitize URL
+        const cleanUrl = url.trim();
+        // Allow relative paths or specific protocols
+        if (
+          cleanUrl.startsWith("/") ||
+          cleanUrl.startsWith("./") ||
+          cleanUrl.startsWith("../") ||
+          /^(http|https|ftp|sftp|mailto):/i.test(cleanUrl)
+        ) {
+          return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">${text}</a>`;
+        }
+        // If dangerous or unknown protocol, render as text or #
+        return `${text} (invalid link)`;
+      },
     )
     .replaceAll(/\n\n/gim, "</p><p>")
     .replaceAll(/\n/gim, "<br>");
