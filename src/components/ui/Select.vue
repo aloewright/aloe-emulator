@@ -74,8 +74,8 @@
         <Button
           type="button"
           variant="ghost"
-          tabindex="-1"
           class="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer"
+          :aria-label="rightIconLabel || 'Perform action'"
           @click="emit('right-icon-click')"
         >
           <component :is="rightIcon" :size="iconSize" />
@@ -117,6 +117,7 @@ interface SelectProps {
   size?: "sm" | "md" | "lg";
   leftIcon?: Component;
   rightIcon?: Component;
+  rightIconLabel?: string;
   disabled?: boolean;
   readonly?: boolean;
   autocomplete?: string;
