@@ -49,12 +49,14 @@ impl TerminalBuffer {
 
         if self.lines.len() > max_lines {
             let lines_to_remove = self.lines.len() - max_lines;
-            for _ in 0..lines_to_remove {
-                if !self.lines.is_empty() {
-                    let removed_line = self.lines.remove(0);
-                    self.total_bytes = self.total_bytes.saturating_sub(removed_line.len() + 1);
-                }
-            }
+            // BOLT: Optimization - use drain instead of repeated remove(0) for O(n) performance
+            // This reduces complexity from O(k*n) to O(n) where k is lines_to_remove
+            let removed_bytes: usize = self
+                .lines
+                .drain(0..lines_to_remove)
+                .map(|line| line.len() + 1) // +1 for newline
+                .sum();
+            self.total_bytes = self.total_bytes.saturating_sub(removed_bytes);
         }
     }
     fn get_lines(&self) -> &Vec<String> {
