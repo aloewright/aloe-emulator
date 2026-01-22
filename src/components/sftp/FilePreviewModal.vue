@@ -631,8 +631,41 @@ function endPan() {
   document.removeEventListener("mouseup", endPan);
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function isValidUrl(url: string): boolean {
+  try {
+    // Allow relative paths
+    if (
+      url.startsWith("/") ||
+      url.startsWith("./") ||
+      url.startsWith("../") ||
+      /^[a-zA-Z0-9_\-.]+$/.test(url)
+    ) {
+      return true;
+    }
+    const parsed = new URL(url);
+    return ["http:", "https:", "sftp:", "mailto:", "ftp:"].includes(
+      parsed.protocol,
+    );
+  } catch {
+    // If it fails URL parsing, it might be a relative path or invalid
+    return false;
+  }
+}
+
 function renderMarkdown(md: string): string {
-  let html = md
+  // Escape HTML first to prevent XSS
+  const escaped = escapeHtml(md);
+
+  const html = escaped
     .replaceAll(/^### (.*$)/gim, "<h3>$1</h3>")
     .replaceAll(/^## (.*$)/gim, "<h2>$1</h2>")
     .replaceAll(/^# (.*$)/gim, "<h1>$1</h1>")
@@ -642,10 +675,12 @@ function renderMarkdown(md: string): string {
     .replaceAll(/_(.*?)_/gim, "<em>$1</em>")
     .replaceAll(/```([\s\S]*?)```/gim, "<pre><code>$1</code></pre>")
     .replaceAll(/`(.*?)`/gim, "<code>$1</code>")
-    .replaceAll(
-      /\[([^\]]{1,1000})\]\(([^)]{1,1000})\)/gim,
-      '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">$1</a>',
-    )
+    .replace(/\[([^\]]{1,1000})\]\(([^)]{1,1000})\)/gim, (match, text, url) => {
+      if (isValidUrl(url)) {
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">${text}</a>`;
+      }
+      return `${text} (${url})`;
+    })
     .replaceAll(/\n\n/gim, "</p><p>")
     .replaceAll(/\n/gim, "<br>");
 
