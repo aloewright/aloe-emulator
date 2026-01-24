@@ -62,7 +62,7 @@
           type="button"
           variant="ghost"
           class="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer"
-          tabindex="-1"
+          :aria-label="passwordToggleLabel"
           @click="togglePasswordVisibility"
         >
           <component :is="isPasswordVisible ? EyeOff : Eye" :size="iconSize" />
@@ -73,8 +73,8 @@
           v-else-if="rightIcon"
           type="button"
           variant="ghost"
-          tabindex="-1"
           class="text-gray-400 hover:text-gray-300 transition-colors cursor-pointer"
+          :aria-label="rightIconLabel"
           @click="emit('right-icon-click')"
         >
           <component :is="rightIcon" :size="iconSize" />
@@ -116,6 +116,7 @@ interface InputProps {
   size?: "sm" | "md" | "lg";
   leftIcon?: Component;
   rightIcon?: Component;
+  rightIconLabel?: string;
   disabled?: boolean;
   readonly?: boolean;
   autocomplete?: string;
@@ -171,6 +172,10 @@ const inputType = computed(() => {
 });
 
 const showPasswordToggle = computed(() => props.type === "password");
+
+const passwordToggleLabel = computed(() => {
+  return isPasswordVisible.value ? "Hide password" : "Show password";
+});
 
 const togglePasswordVisibility = (): void => {
   isPasswordVisible.value = !isPasswordVisible.value;
