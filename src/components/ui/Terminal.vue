@@ -257,7 +257,18 @@ const writeOutput = (data: string): void => {
 
       // Offload analysis to Web Worker
       if (aiStore.inlineEnabled && aiWorker) {
-        debouncedAnalyze(data);
+        aiAnalysisBuffer += data;
+        if (aiAnalysisBuffer.length >= MAX_ANALYSIS_BUFFER) {
+          debouncedAnalyze.cancel();
+          try {
+            aiWorker.postMessage({ type: 'analyze', data: aiAnalysisBuffer });
+            aiAnalysisBuffer = "";
+          } catch (err) {
+            console.error("[Terminal] Failed to post message to AI Worker:", err);
+          }
+        } else {
+          debouncedAnalyze();
+        }
       }
     } catch (error) {
       console.error(`Error in writeOutput for ${props.terminalId}:`, error);
@@ -268,10 +279,15 @@ const writeOutput = (data: string): void => {
 // Web Worker for AI analysis
 let aiWorker: Worker | null = null;
 
-const debouncedAnalyze = debounce((data: string) => {
-  if (aiWorker) {
+// Buffer for AI analysis to reduce worker message overhead and prevent data loss
+let aiAnalysisBuffer = "";
+const MAX_ANALYSIS_BUFFER = 5000;
+
+const debouncedAnalyze = debounce(() => {
+  if (aiWorker && aiAnalysisBuffer) {
     try {
-      aiWorker.postMessage({ type: 'analyze', data });
+      aiWorker.postMessage({ type: 'analyze', data: aiAnalysisBuffer });
+      aiAnalysisBuffer = "";
     } catch (err) {
       console.error("[Terminal] Failed to post message to AI Worker:", err);
     }
