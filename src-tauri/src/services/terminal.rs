@@ -8,6 +8,7 @@ use crate::models::terminal::{
 use crate::services::buffer_manager::TerminalBufferManager;
 use crate::services::recording::SessionRecorder;
 use crate::services::ssh::SSHKeyService;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter};
@@ -202,9 +203,9 @@ impl TerminalManager {
                 }
 
                 // Process buffer saving with smart filtering
-                if let Ok(data_str) = String::from_utf8(data.clone()) {
+                if let Ok(data_str) = std::str::from_utf8(&data) {
                     let mut filter = alt_screen_filter.lock().await;
-                    let filtered_data = filter.process(&data_str);
+                    let filtered_data = filter.process(data_str);
 
                     if !filtered_data.is_empty() {
                         buffer_manager_clone
@@ -406,11 +407,22 @@ impl AltScreenFilter {
         }
     }
 
-    fn process(&mut self, data: &str) -> String {
-        let mut result = String::new();
-        let mut current_pos = 0;
+    fn process<'a>(&mut self, data: &'a str) -> Cow<'a, str> {
         let enter_seq = "\x1b[?1049h";
         let exit_seq = "\x1b[?1049l";
+
+        // Fast path: if not in alt screen and no enter sequence, return borrowed
+        if !self.in_alt_screen && !data.contains(enter_seq) {
+            return Cow::Borrowed(data);
+        }
+
+        // Fast path: if in alt screen and no exit sequence, return empty (all swallowed)
+        if self.in_alt_screen && !data.contains(exit_seq) {
+            return Cow::Borrowed("");
+        }
+
+        let mut result = String::new();
+        let mut current_pos = 0;
 
         while current_pos < data.len() {
             let remaining = &data[current_pos..];
@@ -441,7 +453,7 @@ impl AltScreenFilter {
             }
         }
 
-        result
+        Cow::Owned(result)
     }
 }
 
