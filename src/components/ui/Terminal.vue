@@ -257,7 +257,7 @@ const writeOutput = (data: string): void => {
 
       // Offload analysis to Web Worker
       if (aiStore.inlineEnabled && aiWorker) {
-        debouncedAnalyze(data);
+        queueAiAnalysis(data);
       }
     } catch (error) {
       console.error(`Error in writeOutput for ${props.terminalId}:`, error);
@@ -267,16 +267,38 @@ const writeOutput = (data: string): void => {
 
 // Web Worker for AI analysis
 let aiWorker: Worker | null = null;
+let aiAnalysisBuffer = "";
+const MAX_BUFFER_SIZE = 5000;
 
-const debouncedAnalyze = debounce((data: string) => {
-  if (aiWorker) {
+const flushAiAnalysis = debounce(() => {
+  if (aiWorker && aiAnalysisBuffer) {
     try {
-      aiWorker.postMessage({ type: 'analyze', data });
+      aiWorker.postMessage({ type: 'analyze', data: aiAnalysisBuffer });
+      aiAnalysisBuffer = "";
     } catch (err) {
       console.error("[Terminal] Failed to post message to AI Worker:", err);
     }
   }
 }, 300); // 300ms debounce
+
+const queueAiAnalysis = (data: string) => {
+  aiAnalysisBuffer += data;
+
+  if (aiAnalysisBuffer.length > MAX_BUFFER_SIZE) {
+    // Force flush if buffer gets too large
+    if (aiWorker) {
+      try {
+        aiWorker.postMessage({ type: "analyze", data: aiAnalysisBuffer });
+        aiAnalysisBuffer = "";
+        flushAiAnalysis.cancel(); // Cancel pending debounce
+      } catch (err) {
+        console.error("[Terminal] Failed to post message to AI Worker:", err);
+      }
+    }
+  } else {
+    flushAiAnalysis();
+  }
+};
 
 
 const restoreBuffer = async (): Promise<boolean> => {
@@ -574,7 +596,7 @@ onBeforeUnmount(async () => {
   }
 
   // Cancel any pending AI analysis
-  debouncedAnalyze.cancel();
+  flushAiAnalysis.cancel();
 
   if (aiWorker) {
     aiWorker.terminate();
