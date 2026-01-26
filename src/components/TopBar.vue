@@ -12,8 +12,14 @@
     <!-- Left side buttons -->
     <div class="flex items-center justify-start">
       <!-- Dashboard button -->
-      <div
-        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 cursor-pointer touch-manipulation"
+      <button
+        type="button"
+        title="Dashboard"
+        aria-label="Dashboard"
+        :aria-current="
+          viewState.activeView === 'dashboard' ? 'page' : undefined
+        "
+        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 cursor-pointer touch-manipulation focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none focus-visible:z-10"
         :class="[
           viewState.activeView === 'dashboard' ? 'bg-gray-800' : '',
           isMobile ? 'px-2' : 'px-3',
@@ -31,11 +37,17 @@
             isMobile ? 'w-5 h-5' : 'w-4 h-4',
           ]"
         />
-      </div>
+      </button>
 
       <!-- Workspace button -->
-      <div
-        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 hover:bg-gray-800 cursor-pointer touch-manipulation"
+      <button
+        type="button"
+        title="Workspace"
+        aria-label="Workspace"
+        :aria-current="
+          viewState.activeView === 'workspace' ? 'page' : undefined
+        "
+        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 hover:bg-gray-800 cursor-pointer touch-manipulation focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none focus-visible:z-10"
         :class="[
           viewState.activeView === 'workspace' ? 'bg-gray-800' : '',
           isMobile ? 'px-2' : 'px-3',
@@ -51,11 +63,15 @@
               : 'opacity-60 hover:opacity-100'
           "
         />
-      </div>
+      </button>
 
       <!-- SFTP button -->
-      <div
-        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 hover:bg-gray-800 cursor-pointer touch-manipulation"
+      <button
+        type="button"
+        title="SFTP File Manager"
+        aria-label="SFTP File Manager"
+        :aria-current="viewState.activeView === 'sftp' ? 'page' : undefined"
+        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 hover:bg-gray-800 cursor-pointer touch-manipulation focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none focus-visible:z-10"
         :class="[
           viewState.activeView === 'sftp' ? 'bg-gray-800' : '',
           isMobile ? 'px-2' : 'px-3',
@@ -71,11 +87,15 @@
               : 'opacity-60 hover:opacity-100'
           "
         />
-      </div>
+      </button>
 
       <!-- SSH Profiles button -->
-      <div
-        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 hover:bg-gray-800 cursor-pointer touch-manipulation"
+      <button
+        type="button"
+        title="SSH Profiles"
+        aria-label="SSH Profiles"
+        :aria-expanded="isOverlayVisible('ssh-profile-drawer')"
+        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 hover:bg-gray-800 cursor-pointer touch-manipulation focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none focus-visible:z-10"
         :class="[
           isOverlayVisible('ssh-profile-drawer') ? 'bg-gray-800' : '',
           isMobile ? 'px-2' : 'px-3',
@@ -91,11 +111,15 @@
               : 'opacity-60 hover:opacity-100'
           "
         />
-      </div>
+      </button>
 
       <!-- Terminal Profiles button -->
-      <div
-        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 hover:bg-gray-800 cursor-pointer touch-manipulation"
+      <button
+        type="button"
+        title="Terminal Profiles"
+        aria-label="Terminal Profiles"
+        :aria-expanded="isOverlayVisible('terminal-profile-drawer')"
+        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 hover:bg-gray-800 cursor-pointer touch-manipulation focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none focus-visible:z-10"
         :class="[
           isOverlayVisible('terminal-profile-drawer') ? 'bg-gray-800' : '',
           isMobile ? 'px-2' : 'px-3',
@@ -111,7 +135,7 @@
               : 'opacity-60 hover:opacity-100'
           "
         />
-      </div>
+      </button>
     </div>
 
     <!-- Center content -->
