@@ -89,7 +89,7 @@ impl OpenRouterClient {
         };
 
         let req_json = serde_json::to_string(&req)?;
-        println!("[OpenRouter] Sending request: {}", req_json);
+        let _ = req_json; // Keep the serialization check but silence unused var warning
 
         let resp = self
             .client
