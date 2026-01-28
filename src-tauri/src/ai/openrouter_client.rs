@@ -88,8 +88,7 @@ impl OpenRouterClient {
             messages,
         };
 
-        let req_json = serde_json::to_string(&req)?;
-        println!("[OpenRouter] Sending request: {}", req_json);
+        let _ = serde_json::to_string(&req)?;
 
         let resp = self
             .client
@@ -102,7 +101,6 @@ impl OpenRouterClient {
             .await?;
 
         let status = resp.status();
-        println!("[OpenRouter] Response status: {}", status);
 
         if !status.is_success() {
             let error_text = resp.text().await?;
