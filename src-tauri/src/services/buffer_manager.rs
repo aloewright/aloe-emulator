@@ -49,11 +49,8 @@ impl TerminalBuffer {
 
         if self.lines.len() > max_lines {
             let lines_to_remove = self.lines.len() - max_lines;
-            for _ in 0..lines_to_remove {
-                if !self.lines.is_empty() {
-                    let removed_line = self.lines.remove(0);
-                    self.total_bytes = self.total_bytes.saturating_sub(removed_line.len() + 1);
-                }
+            for removed_line in self.lines.drain(0..lines_to_remove) {
+                self.total_bytes = self.total_bytes.saturating_sub(removed_line.len() + 1);
             }
         }
     }
@@ -197,5 +194,72 @@ impl TerminalBufferManager {
 impl Default for TerminalBufferManager {
     fn default() -> Self {
         Self::new(1000) // Default to 1000 lines per terminal
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_append_data_within_limit() {
+        let mut buffer = TerminalBuffer::new();
+        buffer.append_data("line 1\nline 2\n", 5);
+
+        // "line 1\nline 2\n" splits to ["line 1", "line 2", ""]
+        assert_eq!(buffer.lines.len(), 3);
+        assert_eq!(buffer.lines[0], "line 1");
+        assert_eq!(buffer.lines[1], "line 2");
+        assert_eq!(buffer.lines[2], "");
+
+        // Bytes: 7 + 7 + 1 = 15
+        assert_eq!(buffer.total_bytes, 15);
+    }
+
+    #[test]
+    fn test_append_data_exceeding_limit() {
+        let mut buffer = TerminalBuffer::new();
+        buffer.append_data("1\n2\n3\n", 2);
+
+        // Splits to ["1", "2", "3", ""] (4 lines)
+        // Max 2. Remove first 2: "1", "2".
+        // Remaining: "3", ""
+
+        assert_eq!(buffer.lines.len(), 2);
+        assert_eq!(buffer.lines[0], "3");
+        assert_eq!(buffer.lines[1], "");
+        assert_eq!(buffer.total_bytes, 3); // "3" (1+1) + "" (0+1) = 3
+    }
+
+    #[test]
+    fn test_append_partial_line() {
+        let mut buffer = TerminalBuffer::new();
+        buffer.append_data("start", 5);
+        assert_eq!(buffer.lines.len(), 1);
+        assert_eq!(buffer.lines[0], "start");
+
+        buffer.append_data(" finish\n", 5);
+        // Merges "start" + " finish" -> "start finish"
+        // Pushes "" (split remainder)
+        assert_eq!(buffer.lines.len(), 2);
+        assert_eq!(buffer.lines[0], "start finish");
+        assert_eq!(buffer.lines[1], "");
+        assert_eq!(buffer.total_bytes, 14); // 12+1 + 0+1 = 14
+    }
+
+    #[test]
+    fn test_bulk_add_exceeding_limit() {
+        let mut buffer = TerminalBuffer::new();
+        // Add 10 lines (0-9) without trailing newline to keep it simple
+        let data = "0\n1\n2\n3\n4\n5\n6\n7\n8\n9";
+        // Splits to ["0", ..., "9"] (10 elements)
+        buffer.append_data(data, 5);
+
+        // Max 5. Remove first 5: "0".."4".
+        // Remaining: "5".."9".
+
+        assert_eq!(buffer.lines.len(), 5);
+        assert_eq!(buffer.lines[0], "5");
+        assert_eq!(buffer.lines[4], "9");
     }
 }
