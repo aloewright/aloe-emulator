@@ -49,11 +49,9 @@ impl TerminalBuffer {
 
         if self.lines.len() > max_lines {
             let lines_to_remove = self.lines.len() - max_lines;
-            for _ in 0..lines_to_remove {
-                if !self.lines.is_empty() {
-                    let removed_line = self.lines.remove(0);
-                    self.total_bytes = self.total_bytes.saturating_sub(removed_line.len() + 1);
-                }
+            // Optimization: Use drain to remove multiple lines in O(n) instead of O(k*n) with remove(0)
+            for removed_line in self.lines.drain(0..lines_to_remove) {
+                self.total_bytes = self.total_bytes.saturating_sub(removed_line.len() + 1);
             }
         }
     }
