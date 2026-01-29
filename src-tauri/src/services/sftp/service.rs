@@ -706,10 +706,11 @@ impl SFTPService {
                 message: format!("Failed to open channel for search: {}", e),
             })?;
 
-        // Escape query to prevent command injection
-        // This is a basic escaping, ideally we'd use a robust shell escaping library
-        let escaped_query = query.replace("\"", "\\\"");
-        let command = format!("grep -rInH \"{}\" \"{}\"", escaped_query, path);
+        // Escape query and path to prevent command injection
+        let escaped_query = shell_escape(&query);
+        let escaped_path = shell_escape(&path);
+        // Use -e to treat query as pattern even if it starts with hyphen
+        let command = format!("grep -rInH -e {} {}", escaped_query, escaped_path);
 
         channel
             .exec(true, command)
@@ -949,4 +950,11 @@ impl SFTPService {
 
         Ok(())
     }
+}
+
+/// Escape a string for use in a shell command by wrapping it in single quotes
+/// and escaping internal single quotes.
+fn shell_escape(s: &str) -> String {
+    let escaped = s.replace("'", "'\\''");
+    format!("'{}'", escaped)
 }
