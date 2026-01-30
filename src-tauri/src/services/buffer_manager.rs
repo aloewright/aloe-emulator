@@ -49,11 +49,9 @@ impl TerminalBuffer {
 
         if self.lines.len() > max_lines {
             let lines_to_remove = self.lines.len() - max_lines;
-            for _ in 0..lines_to_remove {
-                if !self.lines.is_empty() {
-                    let removed_line = self.lines.remove(0);
-                    self.total_bytes = self.total_bytes.saturating_sub(removed_line.len() + 1);
-                }
+            // Use drain to remove multiple lines at once in O(n) instead of O(k*n)
+            for removed_line in self.lines.drain(0..lines_to_remove) {
+                self.total_bytes = self.total_bytes.saturating_sub(removed_line.len() + 1);
             }
         }
     }
@@ -197,5 +195,106 @@ impl TerminalBufferManager {
 impl Default for TerminalBufferManager {
     fn default() -> Self {
         Self::new(1000) // Default to 1000 lines per terminal
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_append_data_basic() {
+        let mut buffer = TerminalBuffer::new();
+        buffer.append_data("line1\nline2\n", 100);
+        // "line1", "line2", ""
+        assert_eq!(buffer.lines.len(), 3);
+        assert_eq!(buffer.lines[0], "line1");
+        assert_eq!(buffer.lines[1], "line2");
+        assert_eq!(buffer.lines[2], "");
+        // "line1"(5)+1 + "line2"(5)+1 + ""(0)+1 = 13 bytes
+        assert_eq!(buffer.total_bytes, 13);
+    }
+
+    #[test]
+    fn test_append_data_partial_line() {
+        let mut buffer = TerminalBuffer::new();
+        buffer.append_data("line1", 100);
+        // "line1"
+        assert_eq!(buffer.lines.len(), 1);
+        assert_eq!(buffer.lines[0], "line1");
+        // "line1"(5)+1 = 6
+        assert_eq!(buffer.total_bytes, 6);
+
+        buffer.append_data(" continued\n", 100);
+        // "line1" + " continued" -> "line1 continued"
+        // + ""
+        assert_eq!(buffer.lines.len(), 2);
+        assert_eq!(buffer.lines[0], "line1 continued");
+        assert_eq!(buffer.lines[1], "");
+        // "line1 continued"(15)+1 + ""(0)+1 = 17 bytes
+        assert_eq!(buffer.total_bytes, 17);
+    }
+
+    #[test]
+    fn test_buffer_truncation() {
+        let mut buffer = TerminalBuffer::new();
+        // Add 5 lines. Each adds "lineX", "".
+        // But subsequent adds merge into the last "".
+        // So: "line0", "line1", "line2", "line3", "line4", ""
+        for i in 0..5 {
+            buffer.append_data(&format!("line{}\n", i), 100);
+        }
+        assert_eq!(buffer.lines.len(), 6);
+
+        // Now force truncation to 3 lines
+        // Should keep last 3: "line3", "line4", ""
+        // But wait, append_data checks max_lines at the end of every append.
+
+        let mut buffer2 = TerminalBuffer::new();
+        for i in 0..5 {
+            buffer2.append_data(&format!("line{}\n", i), 3);
+        }
+
+        // After line0: ["line0", ""] (2 lines)
+        // After line1: ["line0", "line1", ""] (3 lines). Max 3. No remove.
+        // After line2: ["line0", "line1", "line2", ""] (4 lines). Remove 1 -> ["line1", "line2", ""]
+        // After line3: ["line1", "line2", "line3", ""] (4 lines). Remove 1 -> ["line2", "line3", ""]
+        // After line4: ["line2", "line3", "line4", ""] (4 lines). Remove 1 -> ["line3", "line4", ""]
+
+        assert_eq!(buffer2.lines.len(), 3);
+        assert_eq!(buffer2.lines[0], "line3");
+        assert_eq!(buffer2.lines[1], "line4");
+        assert_eq!(buffer2.lines[2], "");
+    }
+
+    #[test]
+    fn test_bytes_calculation_on_truncation() {
+        let mut buffer = TerminalBuffer::new();
+        // Add "long line" (9 chars) + \n = 10 bytes
+        // Result: ["long line", ""] (11 bytes)
+        buffer.append_data("long line\n", 2);
+        assert_eq!(buffer.total_bytes, 11);
+
+        // Add "short\n". Last "" becomes "short". Push "".
+        // ["long line", "short", ""]
+        // Bytes: 11 + 6 = 17.
+        // Len 3 > 2. Remove 1 ("long line").
+        // Bytes: 17 - (9+1) = 7.
+        // Result: ["short", ""]
+        buffer.append_data("short\n", 2);
+        assert_eq!(buffer.total_bytes, 7);
+
+        // Add "another\n". Last "" becomes "another". Push "".
+        // ["short", "another", ""]
+        // Bytes: 7 + 8 = 15.
+        // Len 3 > 2. Remove 1 ("short").
+        // Bytes: 15 - (5+1) = 9.
+        // Result: ["another", ""]
+        buffer.append_data("another\n", 2);
+
+        assert_eq!(buffer.total_bytes, 9);
+        assert_eq!(buffer.lines.len(), 2);
+        assert_eq!(buffer.lines[0], "another");
+        assert_eq!(buffer.lines[1], "");
     }
 }
