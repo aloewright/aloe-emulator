@@ -52,7 +52,10 @@ export async function createSSHTerminal(
       profileId,
     });
   } catch (error) {
-    console.error(`Failed to create SSH terminal with profile ${profileId}:`, error);
+    console.error(
+      `Failed to create SSH terminal with profile ${profileId}:`,
+      error,
+    );
     throw error;
   }
 }
@@ -75,7 +78,10 @@ export async function createSSHConfigTerminal(
       },
     );
   } catch (error) {
-    console.error(`Failed to create SSH config terminal for host ${hostName}:`, error);
+    console.error(
+      `Failed to create SSH config terminal for host ${hostName}:`,
+      error,
+    );
     throw error;
   }
 }

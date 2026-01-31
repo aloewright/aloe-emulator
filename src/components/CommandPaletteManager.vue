@@ -18,8 +18,8 @@ onMounted(() => {
       size: "lg",
       showCloseButton: false,
       closeOnBackdrop: true,
-      closeOnEsc: true
-    }
+      closeOnEsc: true,
+    },
   });
 });
 
