@@ -1,6 +1,10 @@
 type FormValues = { [key: string]: unknown };
 
-type ValidatorFn = (value: unknown, params: string[], allValues: FormValues) => string | undefined;
+type ValidatorFn = (
+  value: unknown,
+  params: string[],
+  allValues: FormValues,
+) => string | undefined;
 
 const validators: Record<string, ValidatorFn> = {
   required: (value) => {
