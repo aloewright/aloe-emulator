@@ -1,4 +1,13 @@
-import { ref, computed, inject, onMounted, onUnmounted, toRef, type Ref, type ComputedRef } from "vue";
+import {
+  ref,
+  computed,
+  inject,
+  onMounted,
+  onUnmounted,
+  toRef,
+  type Ref,
+  type ComputedRef,
+} from "vue";
 import { validate as validateFn } from "../utils/validators";
 import type { FormContext } from "../types/form";
 
@@ -33,29 +42,29 @@ export interface UseFormFieldReturn {
 /**
  * Composable for shared form field logic
  * Handles validation, form context integration, and event handlers
- * 
+ *
  * @param props - Component props containing form field configuration
  * @param emit - Component emit function for events
  * @returns Object containing form field state and handlers
- * 
+ *
  * @example
  * ```vue
  * <script setup lang="ts">
  * const props = defineProps<FormFieldProps>();
  * const emit = defineEmits<FormFieldEmits>();
- * 
+ *
  * const { errorMessage, validate, handleBlur, handleFocus } = useFormField(props, emit);
  * </script>
  * ```
  */
 export function useFormField(
   props: FormFieldProps,
-  emit: FormFieldEmits
+  emit: FormFieldEmits,
 ): UseFormFieldReturn {
   // State
   const errorMessage = ref(props.errorMessage || "");
   const touched = ref(false);
-  
+
   // Form context
   const formContext = inject<FormContext>("form-context");
 
