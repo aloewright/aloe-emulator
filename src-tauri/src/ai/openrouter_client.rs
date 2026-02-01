@@ -88,9 +88,7 @@ impl OpenRouterClient {
             messages,
         };
 
-        let req_json = serde_json::to_string(&req)?;
-        println!("[OpenRouter] Sending request: {}", req_json);
-
+        // SECURITY: Request logging omitted to prevent sensitive data leakage
         let resp = self
             .client
             .post(&url)
@@ -102,7 +100,6 @@ impl OpenRouterClient {
             .await?;
 
         let status = resp.status();
-        println!("[OpenRouter] Response status: {}", status);
 
         if !status.is_success() {
             let error_text = resp.text().await?;
