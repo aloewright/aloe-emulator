@@ -759,24 +759,20 @@ export const useSyncStore = defineStore("sync", () => {
    * @returns Global sync settings
    */
 
-
   /**
    * Update global sync settings
    * @param settings - Settings to update
    */
-
 
   /**
    * Get all devices
    * @returns Array of devices
    */
 
-
   /**
    * Get current device
    * @returns Current device or null
    */
-
 
   /**
    * Register current device
@@ -785,13 +781,11 @@ export const useSyncStore = defineStore("sync", () => {
    * @returns Registered device
    */
 
-
   /**
    * Resolve conflict resolution (direct service call)
    * @param id - Conflict ID
    * @param strategy - Resolution strategy
    */
-
 
   return {
     databases,

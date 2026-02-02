@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 
 /**
  * Represents a discovered local SSH key
@@ -50,12 +50,12 @@ export class SSHKeysService {
     }
 
     try {
-      const keys = await invoke<LocalSSHKey[]>('scan_local_ssh_keys');
+      const keys = await invoke<LocalSSHKey[]>("scan_local_ssh_keys");
       this.cachedKeys = keys;
       this.lastScanTime = now;
       return keys;
     } catch (error) {
-      console.error('Failed to scan local SSH keys:', error);
+      console.error("Failed to scan local SSH keys:", error);
       return this.cachedKeys ?? [];
     }
   }
@@ -74,7 +74,7 @@ export class SSHKeysService {
   async getKeysByType(keyType: string): Promise<LocalSSHKey[]> {
     const keys = await this.scanLocalKeys();
     return keys.filter(
-      (key) => key.key_type.toLowerCase() === keyType.toLowerCase()
+      (key) => key.key_type.toLowerCase() === keyType.toLowerCase(),
     );
   }
 
@@ -116,7 +116,7 @@ export const sshKeysService = SSHKeysService.getInstance();
 
 // Export convenience function
 export async function scanLocalSSHKeys(
-  forceRefresh = false
+  forceRefresh = false,
 ): Promise<LocalSSHKey[]> {
   return sshKeysService.scanLocalKeys(forceRefresh);
 }
