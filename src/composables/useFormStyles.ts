@@ -22,10 +22,10 @@ export interface UseFormStylesReturn {
 /**
  * Composable for shared form field styling logic
  * Handles size classes, state classes, and icon sizing
- * 
+ *
  * @param props - Component props containing styling configuration
  * @returns Object containing computed style classes
- * 
+ *
  * @example
  * ```vue
  * <script setup lang="ts">
