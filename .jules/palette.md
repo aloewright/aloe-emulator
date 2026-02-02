@@ -1,0 +1,3 @@
+## 2025-05-24 - Navigation Accessibility Gap
+**Learning:** The application's primary navigation bar relied entirely on `div` elements with `click` handlers, rendering the core navigation inaccessible to keyboard and screen reader users. This suggests a pattern of prioritizing visual implementation over semantic structure in custom UI components.
+**Action:** When auditing components, prioritize checking semantic tags (`button` vs `div`) in core navigation areas first, as these high-impact accessibility gaps can exist even in visually polished interfaces. Always implement `focus-visible` styles for custom buttons.

@@ -274,12 +274,10 @@ export const useSettingsStore = defineStore("settings", () => {
    * @returns Array of system font names
    */
 
-
   /**
    * Get system info with error handling
    * @returns System information
    */
-
 
   // Initialize settings on store creation
   loadSettings();

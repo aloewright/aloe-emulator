@@ -1,5 +1,6 @@
 <template>
-  <div
+  <nav
+    aria-label="Main Navigation"
     class="grid items-center h-[30px] sm:h-9 text-white font-sans select-none bg-bg-primary border-b border-gray-800 shrink-0 relative z-50 topbar-container"
     :class="isMobile ? 'grid-cols-[auto_1fr_auto]' : 'grid-cols-3'"
   >
@@ -12,8 +13,13 @@
     <!-- Left side buttons -->
     <div class="flex items-center justify-start">
       <!-- Dashboard button -->
-      <div
-        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 cursor-pointer touch-manipulation"
+      <button
+        type="button"
+        aria-label="Dashboard"
+        :aria-current="
+          viewState.activeView === 'dashboard' ? 'page' : undefined
+        "
+        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset"
         :class="[
           viewState.activeView === 'dashboard' ? 'bg-gray-800' : '',
           isMobile ? 'px-2' : 'px-3',
@@ -31,11 +37,16 @@
             isMobile ? 'w-5 h-5' : 'w-4 h-4',
           ]"
         />
-      </div>
+      </button>
 
       <!-- Workspace button -->
-      <div
-        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 hover:bg-gray-800 cursor-pointer touch-manipulation"
+      <button
+        type="button"
+        aria-label="Workspace"
+        :aria-current="
+          viewState.activeView === 'workspace' ? 'page' : undefined
+        "
+        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 hover:bg-gray-800 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset"
         :class="[
           viewState.activeView === 'workspace' ? 'bg-gray-800' : '',
           isMobile ? 'px-2' : 'px-3',
@@ -51,11 +62,14 @@
               : 'opacity-60 hover:opacity-100'
           "
         />
-      </div>
+      </button>
 
       <!-- SFTP button -->
-      <div
-        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 hover:bg-gray-800 cursor-pointer touch-manipulation"
+      <button
+        type="button"
+        aria-label="SFTP"
+        :aria-current="viewState.activeView === 'sftp' ? 'page' : undefined"
+        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 hover:bg-gray-800 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset"
         :class="[
           viewState.activeView === 'sftp' ? 'bg-gray-800' : '',
           isMobile ? 'px-2' : 'px-3',
@@ -71,11 +85,14 @@
               : 'opacity-60 hover:opacity-100'
           "
         />
-      </div>
+      </button>
 
       <!-- SSH Profiles button -->
-      <div
-        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 hover:bg-gray-800 cursor-pointer touch-manipulation"
+      <button
+        type="button"
+        aria-label="SSH Profiles"
+        :aria-expanded="isOverlayVisible('ssh-profile-drawer')"
+        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 hover:bg-gray-800 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset"
         :class="[
           isOverlayVisible('ssh-profile-drawer') ? 'bg-gray-800' : '',
           isMobile ? 'px-2' : 'px-3',
@@ -91,11 +108,14 @@
               : 'opacity-60 hover:opacity-100'
           "
         />
-      </div>
+      </button>
 
       <!-- Terminal Profiles button -->
-      <div
-        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 hover:bg-gray-800 cursor-pointer touch-manipulation"
+      <button
+        type="button"
+        aria-label="Terminal Profiles"
+        :aria-expanded="isOverlayVisible('terminal-profile-drawer')"
+        class="flex items-center h-[30px] sm:h-9 transition-colors duration-200 shrink-0 hover:bg-gray-800 cursor-pointer touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset"
         :class="[
           isOverlayVisible('terminal-profile-drawer') ? 'bg-gray-800' : '',
           isMobile ? 'px-2' : 'px-3',
@@ -111,7 +131,7 @@
               : 'opacity-60 hover:opacity-100'
           "
         />
-      </div>
+      </button>
     </div>
 
     <!-- Center content -->
@@ -136,6 +156,8 @@
         <!-- Saved Commands -->
         <Button
           title="Saved Commands"
+          aria-label="Saved Commands"
+          :aria-expanded="isOverlayVisible('saved-command-drawer')"
           variant="ghost"
           size="sm"
           :icon="FileCode"
@@ -150,6 +172,8 @@
         <!-- Recordings -->
         <Button
           title="Session Recordings"
+          aria-label="Session Recordings"
+          :aria-expanded="isOverlayVisible('recordings-modal')"
           variant="ghost"
           size="sm"
           :icon="Video"
@@ -164,6 +188,8 @@
         <!-- Tunnel Manager -->
         <Button
           title="SSH Tunnel Manager"
+          aria-label="SSH Tunnel Manager"
+          :aria-expanded="isOverlayVisible('tunnel-manager-modal')"
           variant="ghost"
           size="sm"
           :icon="Route"
@@ -178,6 +204,8 @@
         <!-- SSH Key Manager -->
         <Button
           title="SSH Key Manager"
+          aria-label="SSH Key Manager"
+          :aria-expanded="isOverlayVisible('ssh-key-manager-modal')"
           variant="ghost"
           size="sm"
           :icon="Key"
@@ -192,6 +220,8 @@
         <!-- Sync Manager -->
         <Button
           title="Sync Manager"
+          aria-label="Sync Manager"
+          :aria-expanded="isOverlayVisible('sync-manager-modal')"
           variant="ghost"
           size="sm"
           :icon="Cloud"
@@ -206,6 +236,8 @@
         <!-- Theme Selector -->
         <Button
           title="Terminal Theme"
+          aria-label="Terminal Theme"
+          :aria-expanded="isOverlayVisible('theme-selector-modal')"
           variant="ghost"
           size="sm"
           :icon="Palette"
@@ -220,6 +252,8 @@
         <!-- Keyboard Shortcuts -->
         <Button
           title="Keyboard Shortcuts"
+          aria-label="Keyboard Shortcuts"
+          :aria-expanded="isOverlayVisible('keyboard-shortcuts-modal')"
           variant="ghost"
           size="sm"
           :icon="Keyboard"
@@ -233,6 +267,8 @@
         <!-- Main Settings / Backup -->
         <Button
           title="Backup & Restore"
+          aria-label="Backup & Restore"
+          :aria-expanded="isOverlayVisible('backup-restore-modal')"
           variant="ghost"
           size="sm"
           :icon="Archive"
@@ -247,6 +283,8 @@
         <!-- AI Assistant Button -->
         <Button
           title="AI Assistant"
+          aria-label="AI Assistant"
+          :aria-pressed="viewState.isAiAssistantActive"
           variant="ghost"
           size="sm"
           :icon="Sparkles"
@@ -260,6 +298,8 @@
         <!-- Master Password  -->
         <Button
           title="Master Password Settings"
+          aria-label="Master Password Settings"
+          :aria-expanded="isOverlayVisible('master-password-settings')"
           variant="ghost"
           size="sm"
           :icon="Shield"
@@ -376,7 +416,7 @@
         </div>
       </Transition>
     </Teleport>
-  </div>
+  </nav>
 </template>
 
 <script setup lang="ts">
