@@ -105,7 +105,7 @@ onMounted(async () => {
         openOverlay("updater-modal");
       }
     },
-    { immediate: true }
+    { immediate: true },
   );
 });
 </script>
