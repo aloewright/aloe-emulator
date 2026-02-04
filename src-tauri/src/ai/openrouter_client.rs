@@ -88,8 +88,9 @@ impl OpenRouterClient {
             messages,
         };
 
-        let req_json = serde_json::to_string(&req)?;
-        println!("[OpenRouter] Sending request: {}", req_json);
+        // Validate request serialization but don't log the sensitive JSON
+        let _ = serde_json::to_string(&req)?;
+        println!("[OpenRouter] Sending request to {}", url);
 
         let resp = self
             .client
