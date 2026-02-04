@@ -64,8 +64,9 @@ impl OllamaClient {
             system: system.map(|s| s.to_string()),
         };
 
-        let req_json = serde_json::to_string(&req)?;
-        println!("[Ollama] Sending request to {}: {}", url, req_json);
+        // Validate request serialization but don't log the sensitive JSON
+        let _ = serde_json::to_string(&req)?;
+        println!("[Ollama] Sending request to {}", url);
 
         let resp = self.client.post(&url).json(&req).send().await?;
         let status = resp.status();
@@ -78,7 +79,6 @@ impl OllamaClient {
         }
 
         let body: GenerateResponse = resp.json().await?;
-        println!("[Ollama] Parsed response: {:?}", body);
         Ok(body.response)
     }
 
