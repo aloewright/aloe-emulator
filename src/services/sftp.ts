@@ -242,9 +242,7 @@ export async function getAllTransfers(
 /**
  * Reorder transfer queue
  */
-export async function reorderQueue(
-  transferIds: string[],
-): Promise<void> {
+export async function reorderQueue(transferIds: string[]): Promise<void> {
   return await api.call("sftp_reorder_queue", { transferIds });
 }
 
