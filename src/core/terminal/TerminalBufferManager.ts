@@ -39,7 +39,10 @@ export class TerminalBufferManager {
 
       this.trimLocalBuffer(buffer);
     } catch (error) {
-      console.error(`Failed to save to local buffer for terminal ${terminalId}:`, error);
+      console.error(
+        `Failed to save to local buffer for terminal ${terminalId}:`,
+        error,
+      );
     }
   }
 
@@ -52,7 +55,10 @@ export class TerminalBufferManager {
     try {
       return await bufferService.getTerminalBuffer(terminalId);
     } catch (error) {
-      console.error(`Failed to get buffer from backend for terminal ${terminalId}:`, error);
+      console.error(
+        `Failed to get buffer from backend for terminal ${terminalId}:`,
+        error,
+      );
       return "";
     }
   }
