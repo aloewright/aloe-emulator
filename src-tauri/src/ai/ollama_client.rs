@@ -64,12 +64,10 @@ impl OllamaClient {
             system: system.map(|s| s.to_string()),
         };
 
-        let req_json = serde_json::to_string(&req)?;
-        println!("[Ollama] Sending request to {}: {}", url, req_json);
+        let _ = serde_json::to_string(&req)?;
 
         let resp = self.client.post(&url).json(&req).send().await?;
         let status = resp.status();
-        println!("[Ollama] Response status: {}", status);
 
         if !status.is_success() {
             let error_text = resp.text().await?;
@@ -78,7 +76,6 @@ impl OllamaClient {
         }
 
         let body: GenerateResponse = resp.json().await?;
-        println!("[Ollama] Parsed response: {:?}", body);
         Ok(body.response)
     }
 
