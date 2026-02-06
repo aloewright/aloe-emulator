@@ -299,7 +299,6 @@ const flushAI = () => {
 };
 
 const debouncedFlush = debounce(flushAI, 300); // 300ms debounce
-
 const restoreBuffer = async (): Promise<boolean> => {
   if (!term || !props.backendTerminalId) return false;
 
