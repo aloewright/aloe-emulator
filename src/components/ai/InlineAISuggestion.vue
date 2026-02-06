@@ -12,12 +12,18 @@
       class="inline-ai-suggestion bg-bg-tertiary/80 backdrop-blur-sm border-y border-gray-700/50 shadow-lg my-1 text-sm"
     >
       <!-- Header -->
-      <div class="flex items-center gap-2 px-3 py-2 border-b border-gray-700/30">
-        <div class="flex items-center justify-center w-6 h-6 rounded-md bg-purple-500/20">
+      <div
+        class="flex items-center gap-2 px-3 py-2 border-b border-gray-700/30"
+      >
+        <div
+          class="flex items-center justify-center w-6 h-6 rounded-md bg-purple-500/20"
+        >
           <Sparkles class="w-3.5 h-3.5 text-purple-400" />
         </div>
         <div class="flex-1">
-          <span v-if="suggestion" class="text-purple-300 font-medium text-sm">{{ suggestion.title }}</span>
+          <span v-if="suggestion" class="text-purple-300 font-medium text-sm">{{
+            suggestion.title
+          }}</span>
           <span v-else class="text-purple-300 font-medium text-sm">Ask AI</span>
         </div>
         <button
@@ -31,8 +37,10 @@
 
       <!-- Content (Suggestion or Input) -->
       <div class="px-3 py-2">
-        <p v-if="suggestion" class="text-gray-300 text-sm">{{ suggestion.message }}</p>
-        
+        <p v-if="suggestion" class="text-gray-300 text-sm">
+          {{ suggestion.message }}
+        </p>
+
         <!-- Manual Input Mode -->
         <div v-if="mode === 'input'" class="flex items-center gap-2">
           <input
@@ -43,7 +51,10 @@
             placeholder="Type your request and press Enter..."
             @keydown.enter.prevent="submitManualPrompt"
           />
-          <button @click="submitManualPrompt" class="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded text-white text-sm">
+          <button
+            @click="submitManualPrompt"
+            class="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded text-white text-sm"
+          >
             Generate
           </button>
         </div>
@@ -56,34 +67,43 @@
             class="flex items-center justify-between p-2 hover:bg-gray-800/50 rounded group"
           >
             <div class="flex items-center gap-2">
-              <component :is="getIcon(action.icon)" class="w-4 h-4 text-gray-400" />
+              <component
+                :is="getIcon(action.icon)"
+                class="w-4 h-4 text-gray-400"
+              />
               <span class="text-sm text-gray-300">{{ action.label }}</span>
             </div>
-            <div v-if="action.command" class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-               <button 
-                 @click="handleAction(action, false)" 
-                 class="px-2 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600"
-                 title="Insert command into terminal"
-                >
-                 Insert
-               </button>
-               <button 
-                 @click="handleAction(action, true)" 
-                 class="px-2 py-1 text-xs rounded bg-purple-600 hover:bg-purple-700 flex items-center gap-1"
-                 title="Insert and run command"
-                >
-                 <Play class="w-3 h-3" />
-                 Run
-               </button>
+            <div
+              v-if="action.command"
+              class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <button
+                @click="handleAction(action, false)"
+                class="px-2 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600"
+                title="Insert command into terminal"
+              >
+                Insert
+              </button>
+              <button
+                @click="handleAction(action, true)"
+                class="px-2 py-1 text-xs rounded bg-purple-600 hover:bg-purple-700 flex items-center gap-1"
+                title="Insert and run command"
+              >
+                <Play class="w-3 h-3" />
+                Run
+              </button>
             </div>
-             <div v-else class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                 <button 
-                 @click="handleAction(action, false)" 
-                 class="px-2 py-1 text-xs rounded bg-purple-600 hover:bg-purple-700 flex items-center gap-1"
-                >
-                 Go
-               </button>
-             </div>
+            <div
+              v-else
+              class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <button
+                @click="handleAction(action, false)"
+                class="px-2 py-1 text-xs rounded bg-purple-600 hover:bg-purple-700 flex items-center gap-1"
+              >
+                Go
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -94,15 +114,25 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from "vue";
 import {
-  Sparkles, X, Terminal, Lightbulb,
-  RefreshCw, Search, Upload, Download, GitBranch, Play,
-  Type, List, PlusSquare
+  Sparkles,
+  X,
+  Terminal,
+  Lightbulb,
+  RefreshCw,
+  Search,
+  Upload,
+  Download,
+  GitBranch,
+  Play,
+  Type,
+  List,
+  PlusSquare,
 } from "lucide-vue-next";
 import type { AISuggestion, AIAction } from "../../services/aiContextAnalyzer";
 
 interface Props {
   suggestion: AISuggestion | null;
-  mode: 'suggestion' | 'input'; // New prop to control mode
+  mode: "suggestion" | "input"; // New prop to control mode
 }
 
 const props = defineProps<Props>();
@@ -110,31 +140,34 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   dismiss: [];
   action: [action: AIAction, execute: boolean]; // Add execute flag
-  feedback: [type: 'positive' | 'negative'];
-  'generate-command': [prompt: string];
+  feedback: [type: "positive" | "negative"];
+  "generate-command": [prompt: string];
 }>();
 
-const manualPrompt = ref('');
+const manualPrompt = ref("");
 const inputRef = ref<HTMLInputElement | null>(null);
 
-watch(() => props.mode, (newMode) => {
-  if (newMode === 'input') {
-    nextTick(() => inputRef.value?.focus());
-  }
-});
+watch(
+  () => props.mode,
+  (newMode) => {
+    if (newMode === "input") {
+      nextTick(() => inputRef.value?.focus());
+    }
+  },
+);
 
 const iconMap: Record<string, any> = {
   terminal: Terminal,
   lightbulb: Lightbulb,
-  'refresh-cw': RefreshCw,
+  "refresh-cw": RefreshCw,
   sparkles: Sparkles,
   search: Search,
   upload: Upload,
   download: Download,
-  'git-branch': GitBranch,
+  "git-branch": GitBranch,
   type: Type,
   list: List,
-  'plus-square': PlusSquare,
+  "plus-square": PlusSquare,
 };
 
 function getIcon(iconName: string) {
@@ -142,18 +175,18 @@ function getIcon(iconName: string) {
 }
 
 function dismiss() {
-  emit('dismiss');
+  emit("dismiss");
 }
 
 function handleAction(action: AIAction, execute: boolean) {
-  emit('action', action, execute);
+  emit("action", action, execute);
 }
 
 function submitManualPrompt() {
-    if (manualPrompt.value.trim()) {
-        emit('generate-command', manualPrompt.value);
-        manualPrompt.value = '';
-    }
+  if (manualPrompt.value.trim()) {
+    emit("generate-command", manualPrompt.value);
+    manualPrompt.value = "";
+  }
 }
 </script>
 
