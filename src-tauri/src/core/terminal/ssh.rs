@@ -285,6 +285,22 @@ impl SSHTerminal {
         // Inject environment variables via export commands
         if let Some(env) = &self.ssh_profile.env {
             for (key, value) in env {
+                // Validate key to prevent command injection
+                if key.is_empty()
+                    || !key.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+                    || key
+                        .chars()
+                        .next()
+                        .map(|c| c.is_ascii_digit())
+                        .unwrap_or(false)
+                {
+                    eprintln!(
+                        "Warning: Skipping invalid environment variable key: {}",
+                        key
+                    );
+                    continue;
+                }
+
                 // Escape single quotes in value
                 let escaped_value = value.replace("'", "'\\''");
                 command_parts.push(format!("export {}='{}'", key, escaped_value));
