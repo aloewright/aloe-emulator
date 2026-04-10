@@ -14,6 +14,7 @@ use russh_keys::key::PublicKey;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
+use tokio::io::AsyncBufReadExt;
 use tokio::sync::RwLock;
 
 /// History manager for terminal command history
@@ -153,20 +154,27 @@ impl HistoryManager {
         &self,
         path: &PathBuf,
     ) -> Result<Vec<CommandHistoryEntry>, AppError> {
-        // Read file as bytes first to handle non-UTF8 encoding
-        let bytes = tokio::fs::read(path)
+        let file = tokio::fs::File::open(path)
             .await
-            .map_err(|e| AppError::General(format!("Failed to read zsh history: {}", e)))?;
+            .map_err(|e| AppError::General(format!("Failed to open zsh history: {}", e)))?;
 
-        // Try to decode as UTF-8, replacing invalid sequences
-        let content = String::from_utf8_lossy(&bytes);
-
+        let mut reader = tokio::io::BufReader::new(file);
+        let mut buffer = Vec::new();
         let mut entries = Vec::new();
         let mut index = 0;
 
-        for line in content.lines() {
+        while reader
+            .read_until(b'\n', &mut buffer)
+            .await
+            .map_err(|e| AppError::General(format!("Failed to read zsh history line: {}", e)))?
+            != 0
+        {
+            let line_cow = String::from_utf8_lossy(&buffer);
+            let line = line_cow.trim_end();
+
             // Skip empty lines
             if line.trim().is_empty() {
+                buffer.clear();
                 continue;
             }
 
@@ -179,6 +187,7 @@ impl HistoryManager {
 
                     // Skip lines with null bytes or other invalid characters
                     if command.contains('\0') {
+                        buffer.clear();
                         continue;
                     }
 
@@ -204,6 +213,7 @@ impl HistoryManager {
 
                 // Skip lines with null bytes or other invalid characters
                 if command.contains('\0') {
+                    buffer.clear();
                     continue;
                 }
 
@@ -216,6 +226,7 @@ impl HistoryManager {
                     index += 1;
                 }
             }
+            buffer.clear();
         }
 
         // Reverse to get most recent first
@@ -229,22 +240,27 @@ impl HistoryManager {
         &self,
         path: &PathBuf,
     ) -> Result<Vec<CommandHistoryEntry>, AppError> {
-        // Read file as bytes first to handle non-UTF8 encoding
-        let bytes = tokio::fs::read(path)
+        let file = tokio::fs::File::open(path)
             .await
-            .map_err(|e| AppError::General(format!("Failed to read bash history: {}", e)))?;
+            .map_err(|e| AppError::General(format!("Failed to open bash history: {}", e)))?;
 
-        // Try to decode as UTF-8, replacing invalid sequences
-        let content = String::from_utf8_lossy(&bytes);
-
+        let mut reader = tokio::io::BufReader::new(file);
+        let mut buffer = Vec::new();
         let mut entries = Vec::new();
         let mut index = 0;
 
-        for line in content.lines() {
-            let command = line.trim();
+        while reader
+            .read_until(b'\n', &mut buffer)
+            .await
+            .map_err(|e| AppError::General(format!("Failed to read bash history line: {}", e)))?
+            != 0
+        {
+            let line_cow = String::from_utf8_lossy(&buffer);
+            let command = line_cow.trim();
 
             // Skip lines with null bytes or other invalid characters
             if command.contains('\0') {
+                buffer.clear();
                 continue;
             }
 
@@ -256,6 +272,7 @@ impl HistoryManager {
                 });
                 index += 1;
             }
+            buffer.clear();
         }
 
         // Reverse to get most recent first
