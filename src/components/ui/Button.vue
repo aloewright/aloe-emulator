@@ -1,7 +1,7 @@
 <template>
   <button
     :class="[
-      'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none cursor-pointer touch-manipulation',
+      'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d0d0d] cursor-pointer touch-manipulation',
       'disabled:opacity-50 disabled:cursor-not-allowed',
       'active:scale-95 active:transform',
       sizeClasses,
@@ -114,21 +114,21 @@ const iconSize = computed(() => {
 const variantClasses = computed(() => {
   switch (props.variant) {
     case "primary":
-      return "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 text-white shadow-sm";
+      return "bg-blue-600 hover:bg-blue-700 focus-visible:ring-blue-500 text-white shadow-sm";
     case "secondary":
-      return "bg-gray-600 hover:bg-gray-700 focus:ring-gray-500 text-white shadow-sm";
+      return "bg-gray-600 hover:bg-gray-700 focus-visible:ring-gray-500 text-white shadow-sm";
     case "success":
-      return "bg-green-600 hover:bg-green-700 focus:ring-green-500 text-white shadow-sm";
+      return "bg-green-600 hover:bg-green-700 focus-visible:ring-green-500 text-white shadow-sm";
     case "warning":
-      return "bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500 text-white shadow-sm";
+      return "bg-yellow-600 hover:bg-yellow-700 focus-visible:ring-yellow-500 text-white shadow-sm";
     case "danger":
-      return "bg-red-600 hover:bg-red-700 text-white shadow-sm";
+      return "bg-red-600 hover:bg-red-700 focus-visible:ring-red-500 text-white shadow-sm";
     case "ghost":
-      return "text-gray-400 hover:text-white hover:bg-gray-700/50 focus:ring-gray-500";
+      return "text-gray-400 hover:text-white hover:bg-gray-700/50 focus-visible:ring-gray-500";
     case "outline":
-      return "border border-gray-600 text-gray-300 hover:bg-gray-700/50 hover:text-white focus:ring-gray-500";
+      return "border border-gray-600 text-gray-300 hover:bg-gray-700/50 hover:text-white focus-visible:ring-gray-500";
     default:
-      return "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 text-white shadow-sm";
+      return "bg-blue-600 hover:bg-blue-700 focus-visible:ring-blue-500 text-white shadow-sm";
   }
 });
 
