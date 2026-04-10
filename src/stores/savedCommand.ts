@@ -33,8 +33,9 @@ export const useSavedCommandStore = defineStore("savedCommand", () => {
 
   const recentCommands = computed(() =>
     commands.value
-      .filter((c): c is SavedCommand & { lastUsedAt: string } => 
-        c?.id !== undefined && c.lastUsedAt !== undefined
+      .filter(
+        (c): c is SavedCommand & { lastUsedAt: string } =>
+          c?.id !== undefined && c.lastUsedAt !== undefined,
       )
       .sort(
         (a, b) =>
